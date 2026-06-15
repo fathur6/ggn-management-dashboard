@@ -5,14 +5,15 @@
  *
  * Repository: ggn-management-dashboard
  * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
- * Web App URL: https://script.google.com/macros/s/AKfycbwfiX_t_P0e8qJWfX80d7Myb4K0WH9KTlEPzxfjzxCcKhi3xI2IHSrguZR1E7RZlahh/exec
+ * Deployment ID: AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B
+ * Web App URL: https://script.google.com/macros/s/AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B/exec
  * Target Spreadsheet ID: 1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
- * 3. Deployment Method: Always deploy via clasp CLI to maintain GitOps workflow:
- * `git ship "your commit message"`
+ * 3. Deployment Method (To keep URL unchanged):
+ * `clasp push && clasp deploy -i AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B -d "Update version"`
  * ============================================================================
  */
 
