@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pelan Taktikal PPS</title>
+    <title>GGN Management Plan</title>
+    <!-- Google Fonts & FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,10 +23,14 @@
         }
     </script>
 
+    <!-- React & ReactDOM (via CDN) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel untuk compile JSX dalam browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- HTML2Canvas & jsPDF untuk Fungsi Penjanaan Laporan PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -77,13 +83,18 @@
 </head>
 <body>
 
+    <!-- Container di mana Dashboard akan dipaparkan -->
     <div id="pps-dashboard-root"></div>
 
+    <!-- Skrip Aplikasi (React & JSX) -->
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
-        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdeMuoSbD7wAgOjeW4335XRcgYbXX3iQRd9PpQFiQ9BBfkx_gTRU9hSHAF8F-da3XlpnmqYU84jMu7/pub?gid=0&single=true&output=csv"; 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM9qvvQIjdxnAQTI3TUtKeV45luklqv3T_VFDGQ4-hlo7Frf0tC46s8XT3cfI4LXva/exec"; 
+        // ============================================================================
+        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA (VERSI TERKINI)
+        // ============================================================================
+        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/export?format=csv&gid=0"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwfiX_t_P0e8qJWfX80d7Myb4K0WH9KTlEPzxfjzxCcKhi3xI2IHSrguZR1E7RZlahh/exec"; 
 
         function App() {
             // =================================================================
@@ -1309,7 +1320,7 @@
                                                                     <svg className="w-4 h-4 text-purple-500 opacity-80 flex-shrink-0 cursor-help" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                                         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 9h6"/><path d="M9 13h6"/>
                                                                     </svg>
-                                                                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-72 bg-gray-700 text-white rounded-md p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[999] shadow-xl font-normal text-xs whitespace-normal break-words leading-relaxed pointer-events-none">
+                                                                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 md:w-72 bg-gray-700 text-white rounded-md p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[999] shadow-xl font-normal text-xs whitespace-normal break-words leading-relaxed pointer-events-none">
                                                                         <span className="text-gray-300 font-semibold block mb-0.5">Catatan:</span>
                                                                         {project.Catatan}
                                                                         <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 border-[6px] border-transparent border-r-gray-700"></div>

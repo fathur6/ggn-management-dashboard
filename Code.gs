@@ -6,19 +6,16 @@
  * Repository: ggn-management-dashboard
  * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
  * Web App URL: https://script.google.com/macros/s/AKfycbwfiX_t_P0e8qJWfX80d7Myb4K0WH9KTlEPzxfjzxCcKhi3xI2IHSrguZR1E7RZlahh/exec
+ * Target Spreadsheet ID: 1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
  * 3. Deployment Method: Always deploy via clasp CLI to maintain GitOps workflow:
- * `clasp push && clasp deploy`
+ * `git ship "your commit message"`
  * ============================================================================
  */
 
-/**
- * Main function to serve the Web App
- * This handles Google OAuth authentication automatically based on deployment settings.
- */
 function doGet() {
   const userEmail = Session.getActiveUser().getEmail();
   const template = HtmlService.createTemplateFromFile('index');
@@ -62,7 +59,8 @@ function saveAdminsToServer(newAdminsList) {
 function doPost(e) {
   var data = JSON.parse(e.postData.contents);
 
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Status Projek PPS");
+  // Menggunakan openById bagi menyokong Local Development Workflow (Standalone Script)
+  var sheet = SpreadsheetApp.openById("1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU").getSheetByName("Status Projek PPS");
   if (!sheet) {
     return ContentService.createTextOutput(JSON.stringify({ "status": "ralat", "mesej": "Sheet 'Status Projek PPS' tidak dijumpai" })).setMimeType(ContentService.MimeType.JSON);
   }
