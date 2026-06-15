@@ -4,9 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GGN Management Plan</title>
+    <!-- Google Fonts & FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
+    <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -21,10 +23,14 @@
         }
     </script>
 
+    <!-- React & ReactDOM (via CDN) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel untuk compile JSX dalam browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- HTML2Canvas & jsPDF untuk Fungsi Penjanaan Laporan PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -77,37 +83,39 @@
 </head>
 <body>
 
+    <!-- Container di mana Dashboard akan dipaparkan -->
     <div id="pps-dashboard-root"></div>
 
-    <div id="pps-dashboard-root"></div>
-
+    <!-- DATA DARI PELAYAN (GOOGLE APPS SCRIPT) -->
+    <!-- Diasingkan dari Babel supaya tidak crash -->
     <script id="gas-data" type="application/json">
         {
             "userEmail": "<?= userEmail ?>",
-            "adminList": <?!= adminList || "[]" ?>
+            "adminList": <?!= adminList ?>
         }
     </script>
 
+    <!-- Skrip Aplikasi (React & JSX) -->
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
         // ============================================================================
-        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA
+        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA (VERSI TERKINI)
         // ============================================================================
-        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/export?format=csv&gid=0"; 
+        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/gviz/tq?tqx=out:csv&gid=0"; 
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B/exec"; 
 
         function App() {
             // =================================================================
-            // PENGURUSAN OAUTH & AKSES ADMIN (VERSI SELAMAT & KALIS CRASH)
+            // PENGURUSAN OAUTH & AKSES ADMIN (VERSI SELAMAT)
             // =================================================================
             let serverUserEmail = "pps@unisza.edu.my"; 
             let initialAdmins = ["pps@unisza.edu.my", "fathurrahman@unisza.edu.my"];
             
             try {
                 const gasDataContent = document.getElementById('gas-data').textContent;
-                // Semak jika ia dibuka di server Google (Simbol <? telah hilang)
-                if (gasDataContent.indexOf("<?") === -1) {
+                // Semak jika ia dibuka di pelayan awan
+                if (gasDataContent.indexOf("<" + "?") === -1) {
                     const parsedData = JSON.parse(gasDataContent);
                     serverUserEmail = parsedData.userEmail;
                     initialAdmins = parsedData.adminList;
@@ -136,7 +144,6 @@
                     setUserRole('viewer');
                 }
             }, [adminList, currentUserEmail]);
-
 
             // =================================================================
             // STATE PROJEK & DASHBOARD
@@ -210,17 +217,15 @@
 
             const saveAdmins = (updatedList) => {
                 setIsAdminSubmitting(true);
-                setAdminList(updatedList); // Update state directly for fast UI
+                setAdminList(updatedList); 
                 setNewAdminEmail('');
 
-                // Connect to backend
                 if (typeof google !== 'undefined' && google.script && google.script.run) {
                     google.script.run.withSuccessHandler(() => {
                         showToast("Senarai Admin berjaya dikemaskini.");
                         setIsAdminSubmitting(false);
                     }).saveAdminsToServer(updatedList);
                 } else {
-                    // For local VS Code fallback
                     setTimeout(() => {
                         showToast("[Dev Mode] Senarai Admin dikemaskini.");
                         setIsAdminSubmitting(false);
@@ -229,18 +234,20 @@
             };
 
             // =================================================================
-            // FUNGSI TARIK DATA & JANA PDF (SEDIA ADA)
+            // FUNGSI TARIK DATA & JANA PDF
             // =================================================================
             const fetchProjects = async () => {
                 setLoading(true);
                 setError(null);
                 try {
                     const cacheBusterUrl = `${GOOGLE_SHEETS_CSV_URL}&t=${new Date().getTime()}`;
-                    const response = await fetch(cacheBusterUrl, { cache: 'no-store', headers: { 'Pragma': 'no-cache', 'Cache-Control': 'no-cache' } });
+                    
+                    const response = await fetch(cacheBusterUrl);
+                    
                     if (!response.ok) throw new Error("Gagal menyambung ke Google Sheets (Status: " + response.status + ")");
                     
                     const csvText = await response.text();
-                    if (csvText.trim().toLowerCase().startsWith('<!doctype html>')) throw new Error("Pautan CSV ini memulangkan laman HTML.");
+                    if (csvText.trim().toLowerCase().startsWith('<!doctype html>')) throw new Error("Pautan memulangkan HTML. Pastikan Sheets ditetapkan kepada 'Anyone with the link'.");
                     if (csvText.startsWith('PK')) throw new Error("Format ZIP dikesan.");
 
                     const parsedData = parseCSV(csvText);
@@ -248,7 +255,7 @@
                     setLastUpdated(new Date().toLocaleTimeString('ms-MY'));
                 } catch (err) {
                     console.error("Ralat Fetch CSV:", err);
-                    setError(err.message || "Gagal memuatkan data dari pangkalan data.");
+                    setError("Ralat sambungan: Sila pastikan Google Sheets anda ditetapkan kepada 'Anyone with the link can view'. " + err.message);
                     setProjects([]); 
                 } finally {
                     setLoading(false);
