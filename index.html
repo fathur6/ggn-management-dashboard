@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pelan Taktikal PPS</title>
+    <!-- Google Fonts & FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Tailwind CSS (via CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'sans-serif'] },
+                    colors: {
+                        unisza: { blue: '#2E4DA7', yellow: '#D4AF37' }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- React & ReactDOM (via CDN) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <!-- Babel untuk compile JSX dalam browser -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- HTML2Canvas & jsPDF untuk Fungsi Penjanaan Laporan PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        #pps-dashboard-root {
+            all: initial; 
+            font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            display: block;
+            width: 100%;
+        }
+        #pps-dashboard-root * {
+            box-sizing: border-box;
+        }
+        ::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: 0.6;
+            transition: 0.2s;
+        }
+        ::-webkit-calendar-picker-indicator:hover {
+            opacity: 1;
+        }
+        .fade-in {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- CSS WAJIB UNTUK LOGIN OVERLAY BARU --- */
+        .login-overlay { 
+            background-color: rgba(15, 23, 42, 0.4); /* Latar belakang gelap sedikit */
+            display: flex; align-items: center; justify-content: center;
+            position: fixed; inset: 0; z-index: 1000;
+            animation: overlayFadeIn 0.3s ease-out forwards;
+        }
+        @keyframes overlayFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        /* Animasi gegar apabila salah kata laluan */
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 
+            10%, 90% { transform: translate3d(-1px, 0, 0); } 
+            20%, 80% { transform: translate3d(2px, 0, 0); } 
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); } 
+            40%, 60% { transform: translate3d(4px, 0, 0); } 
+        }
+
+        /* Menyembunyikan scrollbar untuk paparan kemas menu header */
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Custom Scrollbar untuk Popup Tooltip */
+        .popup-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .popup-scrollbar::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+        .popup-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+        }
+        .popup-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.5);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Container di mana Dashboard akan dipaparkan -->
+    <div id="pps-dashboard-root"></div>
+
+    <!-- Skrip Aplikasi (React & JSX) -->
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // ============================================================================
+        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA
+        // ============================================================================
+        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQdeMuoSbD7wAgOjeW4335XRcgYbXX3iQRd9PpQFiQ9BBfkx_gTRU9hSHAF8F-da3XlpnmqYU84jMu7/pub?gid=0&single=true&output=csv"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyM9qvvQIjdxnAQTI3TUtKeV45luklqv3T_VFDGQ4-hlo7Frf0tC46s8XT3cfI4LXva/exec"; 
+
+        function App() {
+            // State untuk Akses & Keselamatan
+            const [isAuthenticated, setIsAuthenticated] = useState(false);
+            const [overlayPassword, setOverlayPassword] = useState('');
+            const [overlayError, setOverlayError] = useState(false);
+            const [overlayShaking, setOverlayShaking] = useState(false);
+
+            // State Data Projek
+            const [projects, setProjects] = useState([]);
+            const [loading, setLoading] = useState(true);
+            const [error, setError] = useState(null);
+            const [lastUpdated, setLastUpdated] = useState('');
+
+            const [sortConfig, setSortConfig] = useState({ key: null, direction: 'ascending' });
+            const [activeSortConfig, setActiveSortConfig] = useState('taktikal');
+            const [activeMatrixSortConfig, setActiveMatrixSortConfig] = useState('taktikal');
+
+            const [draggedItem, setDraggedItem] = useState(null);
+
+            // State Borang Modal
+            const [showModal, setShowModal] = useState(false);
+            const [isEditing, setIsEditing] = useState(false);
+            const [editOriginalName, setEditOriginalName] = useState('');
+            const [isSubmitting, setIsSubmitting] = useState(false);
+            const [showConfirmDelete, setShowConfirmDelete] = useState(false);
+            const [formError, setFormError] = useState('');
+            
+            const [formData, setFormData] = useState({
+                Jabatan: 'Pentadbiran', Projek: '', TarikhMula: '', Kemajuan: '0', TarikhAsal: '', TarikhSebenar: '', Kepentingan: 'Belum Ditetapkan', Catatan: ''
+            });
+
+            // State untuk PDF
+            const [showReportModal, setShowReportModal] = useState(false);
+            const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+            const [reportSuccess, setReportSuccess] = useState('');
+            const [reportSelections, setReportSelections] = useState({
+                timeline: true,
+                eisenhower: true,
+                department: true,
+                completed: true
+            });
+
+            // Sentiasa bina ikon Lucide
+            useEffect(() => {
+                lucide.createIcons();
+            });
+
+            // Tarik data sebaik laman web dibuka (di belakang tabir)
+            useEffect(() => {
+                fetchProjects();
+            }, []);
+
+            // Auto-focus pada kotak kata laluan apabila belum login
+            useEffect(() => {
+                if (!isAuthenticated) {
+                    setTimeout(() => document.getElementById('overlayPasswordInput')?.focus(), 100);
+                }
+            }, [isAuthenticated]);
+
+            const fetchProjects = async () => {
+                setLoading(true);
+                setError(null);
+                try {
+                    const cacheBusterUrl = `${GOOGLE_SHEETS_CSV_URL}&t=${new Date().getTime()}`;
+                    
+                    const response = await fetch(cacheBusterUrl, { 
+                        cache: 'no-store',
+                        headers: {
+                            'Pragma': 'no-cache',
+                            'Cache-Control': 'no-cache'
+                        }
+                    });
+                    if (!response.ok) throw new Error("Gagal menyambung ke Google Sheets (Status: " + response.status + ")");
+                    
+                    const csvText = await response.text();
+                    
+                    if (csvText.trim().toLowerCase().startsWith('<!doctype html>') || csvText.trim().toLowerCase().startsWith('<html')) {
+                        throw new Error("Pautan CSV ini memulangkan laman HTML. Sila Publish semula sebagai format CSV.");
+                    }
+                    if (csvText.startsWith('PK')) {
+                        throw new Error("Format ZIP dikesan. Anda mesti memilih nama sheet 'Status Projek PPS' berbanding 'Entire Document'.");
+                    }
+
+                    const parsedData = parseCSV(csvText);
+                    setProjects(parsedData);
+                    setLastUpdated(new Date().toLocaleTimeString('ms-MY'));
+                } catch (err) {
+                    console.error("Ralat Fetch CSV:", err);
+                    setError(err.message || "Gagal memuatkan data dari pangkalan data.");
+                    setProjects([]); 
+                } finally {
+                    setLoading(false);
+                }
+            };
+
+            const parseCSV = (text) => {
+                let p = '', row = [''], ret = [row], i = 0, r = 0, s = !0, l;
+                for (let l of text) {
+                    if ('"' === l) {
+                        if (s && l === p) row[i] += l;
+                        s = !s;
+                    } else if (',' === l && s) l = row[++i] = '';
+                    else if ('\n' === l && s) {
+                        if ('\r' === p) row[i] = row[i].slice(0, -1);
+                        row = ret[++r] = [l = '']; i = 0;
+                    } else row[i] += l;
+                    p = l;
+                }
+                if (ret.length < 2) return [];
+                const headers = ret[0].map(h => h.trim());
+                const data = [];
+                for(let j = 1; j < ret.length; j++) {
+                    if(ret[j].length === 1 && ret[j][0] === '') continue; 
+                    let obj = {};
+                    let hasData = false;
+                    for(let k = 0; k < headers.length; k++) {
+                        let val = ret[j][k] !== undefined ? ret[j][k].trim() : '';
+                        obj[headers[k]] = val;
+                        if(val) hasData = true;
+                    }
+                    if(hasData && obj.Projek) data.push(obj);
+                }
+                return data;
+            };
+
+            // PENGESAHAN LOG MASUK DARI OVERLAY
+            const handleOverlayLogin = () => {
+                if(overlayPassword === '2gn@PPS2026' || overlayPassword === 'admin') {
+                    setIsAuthenticated(true);
+                    setOverlayPassword('');
+                    setOverlayError(false);
+                } else {
+                    setOverlayError(true);
+                    setOverlayShaking(true);
+                    setTimeout(() => setOverlayShaking(false), 400);
+                }
+            };
+
+            // =================================================================
+            // FUNGSI JANA & MUAT TURUN LAPORAN PDF
+            // =================================================================
+            const generateAndSendReport = async (e) => {
+                e.preventDefault();
+                setIsGeneratingReport(true);
+                setReportSuccess('');
+                setError('');
+
+                try {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('p', 'mm', 'a4');
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+                    let isFirstPage = true;
+
+                    const addSectionToPdf = async (elementId) => {
+                        const element = document.getElementById(elementId);
+                        if (!element) return;
+
+                        const canvas = await html2canvas(element, { 
+                            scale: 2, 
+                            backgroundColor: '#ffffff',
+                            useCORS: true
+                        });
+                        
+                        const imgData = canvas.toDataURL('image/jpeg', 0.9);
+                        const imgProps = pdf.getImageProperties(imgData);
+                        const margin = 10;
+                        const usableWidth = pdfWidth - (margin * 2);
+                        
+                        const ratio = imgProps.width / imgProps.height;
+                        let heightToFit = usableWidth / ratio;
+
+                        if (heightToFit > (pdfHeight - (margin * 3))) {
+                             heightToFit = pdfHeight - (margin * 3);
+                             const widthToFit = heightToFit * ratio;
+                             const xOffset = (pdfWidth - widthToFit) / 2;
+                             if (!isFirstPage) pdf.addPage();
+                             pdf.addImage(imgData, 'JPEG', xOffset, margin, widthToFit, heightToFit);
+                        } else {
+                             if (!isFirstPage) pdf.addPage();
+                             pdf.addImage(imgData, 'JPEG', margin, margin, usableWidth, heightToFit);
+                        }
+
+                        pdf.setFontSize(8);
+                        pdf.setTextColor(128, 128, 128);
+                        pdf.text(`Laporan dijana pada: ${new Date().toLocaleString('ms-MY')}`, margin, pdfHeight - 10);
+                        
+                        isFirstPage = false;
+                    };
+
+                    if (reportSelections.timeline) await addSectionToPdf('section-timeline');
+                    if (reportSelections.eisenhower) await addSectionToPdf('section-eisenhower');
+                    if (reportSelections.department) await addSectionToPdf('section-department');
+                    if (reportSelections.completed) await addSectionToPdf('section-completed');
+
+                    const today = new Date();
+                    const dd = String(today.getDate()).padStart(2, '0');
+                    const mm = String(today.getMonth() + 1).padStart(2, '0');
+                    const yyyy = today.getFullYear();
+                    const fileName = `LaporanStatusProjekPPS_${dd}${mm}${yyyy}.pdf`;
+                    
+                    pdf.save(fileName);
+
+                    setReportSuccess(`Laporan PDF '${fileName}' berjaya dimuat turun ke peranti anda.`);
+                    
+                    setTimeout(() => {
+                        setShowReportModal(false);
+                        setReportSuccess('');
+                    }, 4000);
+
+                } catch (err) {
+                    console.error("Gagal menjana laporan:", err);
+                    alert("Ralat semasa menjana laporan.");
+                } finally {
+                    setIsGeneratingReport(false);
+                }
+            };
+
+            const openAddModal = () => {
+                setIsEditing(false);
+                setFormError('');
+                setShowConfirmDelete(false);
+                setFormData({ Jabatan: 'Pentadbiran', Projek: '', TarikhMula: '', Kemajuan: '0', TarikhAsal: '', TarikhSebenar: '', Kepentingan: 'Belum Ditetapkan', Catatan: '' });
+                setShowModal(true);
+            };
+
+            const openEditModal = (project) => {
+                setIsEditing(true);
+                setFormError('');
+                setShowConfirmDelete(false);
+                setEditOriginalName(project.Projek);
+                setFormData({ 
+                    ...project,
+                    TarikhSebenar: project.TarikhSebenar || project.TarikhAkhir || '',
+                    Kepentingan: project.Kepentingan || 'Belum Ditetapkan',
+                    Catatan: project.Catatan || ''
+                });
+                setShowModal(true);
+            };
+
+            const handleAddClick = () => {
+                openAddModal();
+            };
+
+            const handleEditClick = (project) => {
+                openEditModal(project);
+            };
+
+            const processDrop = async (projekName, quadrant) => {
+                const project = projects.find(p => p.Projek === projekName);
+                if (!project || (project.Kepentingan || 'Belum Ditetapkan') === quadrant) return;
+
+                const updatedProject = { ...project, Kepentingan: quadrant };
+                setProjects(prevProjects => prevProjects.map(p => p.Projek === projekName ? updatedProject : p));
+
+                try {
+                    const payload = {
+                        action: 'update',
+                        oldProjek: projekName,
+                        Timestamp: new Date().toLocaleString('ms-MY'),
+                        ...updatedProject
+                    };
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                } catch (err) {
+                    console.error("Gagal kemaskini matrix", err);
+                }
+            };
+
+            const handleDrop = async (e, quadrant) => {
+                e.preventDefault();
+                const projekName = e.dataTransfer.getData('text/plain');
+                if (!projekName) return;
+                processDrop(projekName, quadrant);
+            };
+
+            const handleSaveProject = async (e) => {
+                e.preventDefault();
+                setIsSubmitting(true);
+                setFormError('');
+                
+                const payload = {
+                    action: isEditing ? 'update' : 'add',
+                    oldProjek: isEditing ? editOriginalName : '',
+                    Timestamp: new Date().toLocaleString('ms-MY'),
+                    ...formData
+                };
+
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                    
+                    const newData = { ...formData, Timestamp: payload.Timestamp };
+                    if (isEditing) {
+                        setProjects(prevProjects => prevProjects.map(p => p.Projek === editOriginalName ? newData : p));
+                    } else {
+                        setProjects(prevProjects => [...prevProjects, newData]);
+                    }
+                    
+                    setShowModal(false);
+                } catch (err) {
+                    console.error(err);
+                    setFormError("Ralat semasa menyimpan ke Google Sheets. Sila cuba lagi.");
+                } finally {
+                    setIsSubmitting(false);
+                }
+            };
+
+            const executeDelete = async () => {
+                setIsSubmitting(true);
+                setFormError('');
+                const payload = { action: 'delete', oldProjek: editOriginalName };
+
+                try {
+                    await fetch(GOOGLE_SCRIPT_URL, {
+                        method: 'POST',
+                        mode: 'no-cors',
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                        body: JSON.stringify(payload)
+                    });
+                    setProjects(prevProjects => prevProjects.filter(p => p.Projek !== editOriginalName));
+                    setShowModal(false);
+                } catch (err) {
+                    console.error(err);
+                    setFormError("Ralat semasa memadam dari Google Sheets.");
+                } finally {
+                    setIsSubmitting(false);
+                    setShowConfirmDelete(false);
+                }
+            };
+
+            const handleDragStart = (e, project) => {
+                e.dataTransfer.setData('text/plain', project.Projek);
+                setDraggedItem(project.Projek);
+            };
+
+            const handleDragEnd = () => setDraggedItem(null);
+            
+            const handleDragOver = (e) => {
+                e.preventDefault();
+            };
+
+            const toInputDate = (dateStr) => {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    if (parts[0].length === 4) return dateStr;
+                    const day = parts[0].padStart(2, '0');
+                    const monthStr = parts[1].toLowerCase();
+                    const year = parts[2];
+                    const monthMap = {'jan': '01', 'feb': '02', 'mac': '03', 'apr': '04', 'mei': '05', 'jun': '06', 'jul': '07', 'ogo': '08', 'sep': '09', 'okt': '10', 'nov': '11', 'dis': '12'};
+                    const month = monthMap[monthStr] || '01';
+                    return `${year}-${month}-${day}`;
+                }
+                return '';
+            };
+
+            const toDisplayDate = (dateStr) => {
+                if (!dateStr) return '';
+                const parts = dateStr.split('-');
+                if (parts.length === 3) {
+                    const year = parts[0];
+                    const month = parts[1];
+                    const day = parts[2];
+                    const reverseMonthMap = {'01': 'Jan', '02': 'Feb', '03': 'Mac', '04': 'Apr', '05': 'Mei', '06': 'Jun', '07': 'Jul', '08': 'Ogo', '09': 'Sep', '10': 'Okt', '11': 'Nov', '12': 'Dis'};
+                    const monthStr = reverseMonthMap[month] || 'Jan';
+                    return `${day}-${monthStr}-${year}`;
+                }
+                return dateStr;
+            };
+
+            const checkIsOverdue = (tarikhAsal, progress) => {
+                const p = parseInt(progress) || 0;
+                if (p >= 100) return false;
+                if (!tarikhAsal) return false;
+                const parts = tarikhAsal.split('-');
+                if (parts.length !== 3) return false;
+                const day = parseInt(parts[0], 10);
+                const monthStr = parts[1].toLowerCase();
+                const year = parseInt(parts[2], 10);
+                const monthMap = {'jan': 0, 'feb': 1, 'mac': 2, 'apr': 3, 'mei': 4, 'jun': 5, 'jul': 6, 'ogo': 7, 'sep': 8, 'okt': 9, 'nov': 10, 'dis': 11};
+                const month = monthMap[monthStr];
+                if (month === undefined) return false;
+                const dueDate = new Date(year, month, day);
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                return dueDate < today;
+            };
+
+            const getBarColor = (dept, progress, isOverdue) => {
+                if (isOverdue) return { bg: 'bg-red-100', fill: 'bg-red-400' };
+                const p = parseInt(progress) || 0;
+                if (dept === 'Pentadbiran') {
+                    if (p <= 40) return { bg: 'bg-blue-100', fill: 'bg-blue-400' };
+                    if (p <= 80) return { bg: 'bg-blue-200', fill: 'bg-blue-600' };
+                    return { bg: 'bg-blue-200', fill: 'bg-blue-800' };
+                }
+                if (dept === 'Akademik') {
+                    if (p <= 40) return { bg: 'bg-orange-100', fill: 'bg-orange-400' };
+                    if (p <= 80) return { bg: 'bg-orange-200', fill: 'bg-orange-600' };
+                    return { bg: 'bg-orange-200', fill: 'bg-orange-800' };
+                }
+                if (dept === 'Hal Ehwal Siswazah') {
+                    if (p <= 40) return { bg: 'bg-green-100', fill: 'bg-green-400' };
+                    if (p <= 80) return { bg: 'bg-green-200', fill: 'bg-green-600' };
+                    return { bg: 'bg-green-200', fill: 'bg-green-800' };
+                }
+                return { bg: 'bg-gray-100', fill: 'bg-gray-500' };
+            };
+
+            const getDeptIcon = (dept) => {
+                if (dept === 'Pentadbiran') return 'home';
+                if (dept === 'Akademik') return 'feather';
+                if (dept === 'Hal Ehwal Siswazah') return 'graduation-cap';
+                return 'folder';
+            };
+
+            const departmentConfig = {
+                'Pentadbiran': { headerBg: 'bg-blue-600' },
+                'Akademik': { headerBg: 'bg-orange-600' },
+                'Hal Ehwal Siswazah': { headerBg: 'bg-green-600' }
+            };
+
+            const activeProjects = projects.filter(p => parseInt(p.Kemajuan) < 100);
+            const completedProjects = projects.filter(p => parseInt(p.Kemajuan) === 100);
+
+            const parseDateForSort = (dateStr) => {
+                if(!dateStr) return 0;
+                const parts = dateStr.split('-');
+                if(parts.length !== 3) return 0;
+                const monthMap = {'jan':0,'feb':1,'mac':2,'apr':3,'mei':4,'jun':5,'jul':6,'ogo':7,'sep':8,'okt':9,'nov':10,'dis':11};
+                return new Date(parts[2], monthMap[parts[1].toLowerCase()] || 0, parts[0]).getTime();
+            };
+
+            const sortedCompletedProjects = useMemo(() => {
+                let sortableItems = [...completedProjects];
+                if (sortConfig.key !== null) {
+                    sortableItems.sort((a, b) => {
+                        let valA = a[sortConfig.key] || '';
+                        let valB = b[sortConfig.key] || '';
+                        if (sortConfig.key === 'TarikhAsal' || sortConfig.key === 'TarikhSebenar' || sortConfig.key === 'TarikhMula') {
+                            valA = parseDateForSort(valA);
+                            valB = parseDateForSort(valB);
+                        } else {
+                            valA = valA.toString().toLowerCase();
+                            valB = valB.toString().toLowerCase();
+                        }
+                        if (valA < valB) return sortConfig.direction === 'ascending' ? -1 : 1;
+                        if (valA > valB) return sortConfig.direction === 'ascending' ? 1 : -1;
+                        return 0;
+                    });
+                }
+                return sortableItems;
+            }, [completedProjects, sortConfig]);
+
+            const requestSort = (key) => {
+                let direction = 'ascending';
+                if (sortConfig.key === key && sortConfig.direction === 'ascending') direction = 'descending';
+                setSortConfig({ key, direction });
+            };
+
+            const renderSortIcon = (columnName) => {
+                const isActive = sortConfig.key === columnName;
+                const isAscending = sortConfig.direction === 'ascending';
+                const baseClass = "inline ml-1.5 w-3.5 h-3.5 flex-shrink-0 transition-transform";
+                if (!isActive) {
+                    return <svg className={`${baseClass} text-gray-400 opacity-60`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>;
+                }
+                if (isAscending) {
+                    return <svg className={`${baseClass} text-purple-600 font-bold`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>;
+                }
+                return <svg className={`${baseClass} text-purple-600 font-bold`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>;
+            };
+
+            // =================================================================
+            // FUNGSI KIRAAN PERATUSAN MASA DIGUNAKAN (DAY SPENT %)
+            // =================================================================
+            const getDaySpentPercentageValue = (startDateStr, plannedDateStr) => {
+                const startObj = parseDateForSort(startDateStr);
+                const planObj = parseDateForSort(plannedDateStr);
+                if (startObj === 0 || planObj === 0) return 0;
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const todayTime = today.getTime();
+                
+                const totalDuration = planObj - startObj;
+                const elapsedDuration = todayTime - startObj;
+                
+                if (totalDuration <= 0) return elapsedDuration > 0 ? 9999 : 0;
+                
+                let percentage = (elapsedDuration / totalDuration) * 100;
+                return percentage < 0 ? 0 : percentage;
+            };
+
+            const calculateDaySpentPercentage = (startDateStr, plannedDateStr) => {
+                const startObj = parseDateForSort(startDateStr);
+                const planObj = parseDateForSort(plannedDateStr);
+                
+                if (startObj === 0 || planObj === 0) return '-';
+                
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                const todayTime = today.getTime();
+                
+                const totalDuration = planObj - startObj;
+                const elapsedDuration = todayTime - startObj;
+                
+                if (totalDuration <= 0) return '100%';
+                
+                let percentage = (elapsedDuration / totalDuration) * 100;
+                if (percentage < 0) percentage = 0;
+                
+                return Math.round(percentage) + '%';
+            };
+
+            // =================================================================
+            // KOMPONEN CARTA GARIS MASA (TIMELINE)
+            // =================================================================
+            const ProjectTimeline = ({ activeProjects, completedProjects }) => {
+                const quarters = [
+                    { id: 'q1', name: "Q1", barColor: "bg-[#ffc107]", borderColor: "border-[#ffc107]", textColor: "text-[#ffc107]", months: ["Jan", "Feb", "Mac"] },
+                    { id: 'q2', name: "Q2", barColor: "bg-[#29b6f6]", borderColor: "border-[#29b6f6]", textColor: "text-[#29b6f6]", months: ["Apr", "Mei", "Jun"] },
+                    { id: 'q3', name: "Q3", barColor: "bg-[#ff5722]", borderColor: "border-[#ff5722]", textColor: "text-[#ff5722]", months: ["Jul", "Ogo", "Sep"] },
+                    { id: 'q4', name: "Q4", barColor: "bg-[#ff4081]", borderColor: "border-[#ff4081]", textColor: "text-[#ff4081]", months: ["Okt", "Nov", "Dis"] }
+                ];
+
+                const monthMap = { 'jan': 0, 'feb': 1, 'mac': 2, 'apr': 3, 'mei': 4, 'jun': 5, 'jul': 6, 'ogo': 7, 'sep': 8, 'okt': 9, 'nov': 10, 'dis': 11 };
+                
+                const activeByMonth = Array(12).fill().map(() => []);
+                const completedByMonth = Array(12).fill().map(() => []);
+
+                const [hoveredId, setHoveredId] = useState(null);
+                const [pinnedId, setPinnedId] = useState(null);
+
+                useEffect(() => {
+                    const handleGlobalClick = (e) => {
+                        if (!e.target.closest('.timeline-node-container')) {
+                            setPinnedId(null);
+                        }
+                    };
+                    document.addEventListener('mousedown', handleGlobalClick);
+                    return () => document.removeEventListener('mousedown', handleGlobalClick);
+                }, []);
+
+                const handleNodeEnter = (nodeId) => {
+                    setHoveredId(nodeId);
+                    if (pinnedId && pinnedId !== nodeId) setPinnedId(null);
+                };
+
+                const handleNodeLeave = () => setHoveredId(null);
+
+                const handleNodeClick = (nodeId) => {
+                    setPinnedId(pinnedId === nodeId ? null : nodeId);
+                };
+
+                activeProjects.forEach(p => {
+                    const dateStr = p.TarikhAsal; 
+                    if (dateStr) {
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                            const mIndex = monthMap[parts[1].toLowerCase()];
+                            if (mIndex !== undefined) activeByMonth[mIndex].push(p);
+                        }
+                    }
+                });
+
+                completedProjects.forEach(p => {
+                    const dateStr = p.TarikhSebenar || p.TarikhAsal; 
+                    if (dateStr) {
+                        const parts = dateStr.split('-');
+                        if (parts.length === 3) {
+                            const mIndex = monthMap[parts[1].toLowerCase()];
+                            if (mIndex !== undefined) completedByMonth[mIndex].push(p);
+                        }
+                    }
+                });
+
+                const timelineData = quarters.map((q, qIndex) => {
+                    return {
+                        ...q,
+                        monthsData: q.months.map((mName, i) => {
+                            const absMonthIndex = (qIndex * 3) + i;
+                            return { name: mName, active: activeByMonth[absMonthIndex], completed: completedByMonth[absMonthIndex] };
+                        })
+                    };
+                });
+
+                return (
+                    <div id="section-timeline" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 scroll-mt-20">
+                        <div className="mb-6">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="calendar-days" className="w-5 h-5 text-blue-600"></i> Carta Sukuan Tahun
+                            </h2>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Garis masa paparan projek mengikut bulan. Nombor berwarna mewakili sasaran, nombor kelabu mewakili projek siap.<br/>
+                                Klik pada nombor untuk mengekalkan popup terbuka supaya anda boleh scroll senarai.
+                            </p>
+                        </div>
+                        
+                        <div className="w-full pb-36 pt-16">
+                            <div className="w-full px-2 sm:px-4">
+                                <div className="relative flex w-full bg-gray-100 p-2 rounded-full shadow-inner">
+                                    {timelineData.map((q, qIndex) => (
+                                        <div 
+                                            key={q.id} 
+                                            className={`flex-1 flex justify-around items-center h-16 ${q.barColor} ${qIndex === 0 ? 'rounded-l-full' : ''} ${qIndex === timelineData.length - 1 ? 'rounded-r-full' : ''} border-r-2 border-white/30 last:border-r-0 relative`}
+                                        >
+                                            <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
+                                                <div className={`border-[3px] ${q.borderColor} bg-white px-5 py-1 rounded-xl font-bold text-gray-600 shadow-sm min-w-[70px] text-center text-sm`}>
+                                                    {q.name}
+                                                </div>
+                                                <svg className={`w-4 h-5 ${q.textColor} mt-1`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <line x1="12" y1="19" x2="12" y2="5"></line>
+                                                    <polyline points="5 12 12 5 19 12"></polyline>
+                                                </svg>
+                                            </div>
+
+                                            {q.monthsData.map((m, mIndex) => {
+                                                const activeNodeId = `active-${qIndex}-${mIndex}`;
+                                                const completedNodeId = `completed-${qIndex}-${mIndex}`;
+                                                const isActiveVisible = hoveredId === activeNodeId || pinnedId === activeNodeId;
+                                                const isCompletedVisible = hoveredId === completedNodeId || pinnedId === completedNodeId;
+
+                                                return (
+                                                    <div key={mIndex} className="relative flex flex-col items-center">
+                                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-xs text-gray-500 shadow-sm z-20">
+                                                            {m.name}
+                                                        </div>
+
+                                                        {(m.active.length > 0 || m.completed.length > 0) && (
+                                                            <div className="absolute top-10 flex flex-col items-center z-30">
+                                                                <div className={`w-0.5 bg-gray-300 relative transition-colors ${m.active.length > 0 ? 'h-10' : 'h-[5.5rem]'}`}>
+                                                                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-2 h-4 bg-gray-50 border border-gray-300 rounded-full"></div>
+                                                                </div>
+                                                                
+                                                                {m.active.length > 0 && (
+                                                                    <div 
+                                                                        className="relative cursor-pointer flex flex-col items-center timeline-node-container"
+                                                                        onMouseEnter={() => handleNodeEnter(activeNodeId)}
+                                                                        onMouseLeave={handleNodeLeave}
+                                                                        onClick={() => handleNodeClick(activeNodeId)}
+                                                                    >
+                                                                        <div className={`w-10 h-10 ${q.barColor} rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isActiveVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
+                                                                            {m.active.length < 10 ? `0${m.active.length}` : m.active.length}
+                                                                        </div>
+
+                                                                        <div 
+                                                                            className={`absolute top-full mt-2 w-64 bg-gray-800 text-white rounded-xl p-4 transition-all duration-200 shadow-xl z-50 cursor-default ${isActiveVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'}`}
+                                                                            onClick={(e) => e.stopPropagation()} 
+                                                                        >
+                                                                            <div className="text-gray-300 text-xs font-bold mb-2 uppercase tracking-wider border-b border-gray-600 pb-1.5 flex items-center gap-1.5">
+                                                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                                                                                {m.active.length} Sasaran Projek ({m.name} {q.name})
+                                                                            </div>
+                                                                            <ul className="text-left space-y-2.5 mt-2 max-h-48 overflow-y-auto pr-2 popup-scrollbar">
+                                                                                {m.active.map((p, idx) => (
+                                                                                    <li key={idx} className="text-sm font-medium leading-snug flex items-start gap-2.5">
+                                                                                        <span className={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${q.barColor}`}></span>
+                                                                                        <span className="break-words">{p.Projek}</span>
+                                                                                    </li>
+                                                                                ))}
+                                                                            </ul>
+                                                                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-[8px] border-transparent border-b-gray-800"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+
+                                                                {m.active.length > 0 && m.completed.length > 0 && (
+                                                                    <div className="h-4 w-0.5 bg-gray-300"></div>
+                                                                )}
+
+                                                                {m.completed.length > 0 && (
+                                                                    <div 
+                                                                        className="relative cursor-pointer flex flex-col items-center timeline-node-container"
+                                                                        onMouseEnter={() => handleNodeEnter(completedNodeId)}
+                                                                        onMouseLeave={handleNodeLeave}
+                                                                        onClick={() => handleNodeClick(completedNodeId)}
+                                                                    >
+                                                                        <div className={`w-10 h-10 bg-gray-400 rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isCompletedVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
+                                                                            {m.completed.length < 10 ? `0${m.completed.length}` : m.completed.length}
+                                                                        </div>
+
+                                                                        <div 
+                                                                            className={`absolute top-full mt-2 w-64 bg-gray-800 text-white rounded-xl p-4 transition-all duration-200 shadow-xl z-50 cursor-default ${isCompletedVisible ? 'opacity-100 visible translate-y-0' : 'opacity-0 invisible translate-y-2 pointer-events-none'}`}
+                                                                            onClick={(e) => e.stopPropagation()}
+                                                                        >
+                                                                            <div className="text-gray-300 text-xs font-bold mb-2 uppercase tracking-wider border-b border-gray-600 pb-1.5 flex items-center gap-1.5">
+                                                                                <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                                                                {m.completed.length} Projek Siap ({m.name} {q.name})
+                                                                            </div>
+                                                                            <ul className="text-left space-y-2.5 mt-2 max-h-48 overflow-y-auto pr-2 popup-scrollbar">
+                                                                                {m.completed.map((p, idx) => (
+                                                                                    <li key={idx} className="text-sm font-medium leading-snug flex items-start gap-2.5">
+                                                                                        <span className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0 bg-gray-400"></span>
+                                                                                        <span className="break-words">{p.Projek}</span>
+                                                                                    </li>
+                                                                                ))}
+                                                                            </ul>
+                                                                            <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-[8px] border-transparent border-b-gray-800"></div>
+                                                                        </div>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* JADUAL RINGKASAN SUKU TAHUN (Q1 - Q4) UNTUK LAPORAN PDF */}
+                        <div className="mt-8 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
+                            <table className="w-full text-sm text-left text-gray-600 table-fixed">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="w-32 px-4 py-3 font-bold text-gray-700 border-r border-gray-200 text-center">Status</th>
+                                        {timelineData.map(q => (
+                                            <th key={q.id} className="px-4 py-3 text-center border-r border-gray-200 last:border-r-0">
+                                                <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${q.barColor}`}>{q.name}</span>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {/* Baris Aktif */}
+                                    <tr className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-4 py-4 font-semibold text-blue-700 border-r border-gray-200 bg-blue-50/30 align-top text-center">
+                                            <div className="flex flex-col items-center gap-1.5">
+                                                <i data-lucide="target" className="w-5 h-5"></i>
+                                                <span className="text-xs uppercase tracking-wide">Sasaran<br/>Aktif</span>
+                                            </div>
+                                        </td>
+                                        {timelineData.map(q => {
+                                            const qActive = q.monthsData.reduce((acc, m) => acc.concat(m.active), []);
+                                            return (
+                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 last:border-r-0 align-top">
+                                                    {qActive.length > 0 ? (
+                                                        <ul className="space-y-1.5">
+                                                            {qActive.map((p, idx) => (
+                                                                <li key={idx} className="flex items-start gap-2">
+                                                                    <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${q.barColor}`}></span>
+                                                                    <span className="text-xs font-medium text-gray-700 leading-snug">{p.Projek}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-xs block text-center mt-2">- Tiada -</span>
+                                                    )}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                    
+                                    {/* Baris Siap */}
+                                    <tr className="hover:bg-gray-50/50 transition-colors">
+                                        <td className="px-4 py-4 font-semibold text-gray-600 border-r border-gray-200 bg-gray-100/50 align-top text-center">
+                                            <div className="flex flex-col items-center gap-1.5">
+                                                <i data-lucide="check-circle" className="w-5 h-5"></i>
+                                                <span className="text-xs uppercase tracking-wide">Telah<br/>Siap</span>
+                                            </div>
+                                        </td>
+                                        {timelineData.map(q => {
+                                            const qCompleted = q.monthsData.reduce((acc, m) => acc.concat(m.completed), []);
+                                            return (
+                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 last:border-r-0 align-top">
+                                                    {qCompleted.length > 0 ? (
+                                                        <ul className="space-y-1.5">
+                                                            {qCompleted.map((p, idx) => (
+                                                                <li key={idx} className="flex items-start gap-2">
+                                                                    <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-gray-400"></span>
+                                                                    <span className="text-xs font-medium text-gray-700 leading-snug">{p.Projek}</span>
+                                                                </li>
+                                                            ))}
+                                                        </ul>
+                                                    ) : (
+                                                        <span className="text-gray-400 italic text-xs block text-center mt-2">- Tiada -</span>
+                                                    )}
+                                                </td>
+                                            );
+                                        })}
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            };
+
+            const ProjectBar = ({ project, isDraggable = true }) => {
+                const progress = parseInt(project.Kemajuan) || 0;
+                const isCompleted = progress === 100;
+                const isOverdue = checkIsOverdue(project.TarikhAsal, progress);
+                const colors = getBarColor(project.Jabatan, progress, isOverdue);
+
+                return (
+                    <div 
+                        draggable={!isCompleted}
+                        onDragStart={(e) => handleDragStart(e, project)}
+                        onDragEnd={handleDragEnd}
+                        onClick={() => handleEditClick(project)} 
+                        className={`relative w-full ${colors.bg} rounded-lg h-16 mb-3 border border-black/5 shadow-sm group hover:shadow-md hover:ring-2 hover:ring-blue-300 transition-all cursor-pointer ${!isCompleted ? 'active:cursor-grabbing cursor-grab' : ''} ${draggedItem === project.Projek ? 'opacity-50 scale-95' : 'opacity-100'}`}
+                    >
+                        <div className="absolute inset-0 rounded-lg overflow-hidden pointer-events-none">
+                            <div 
+                                className={`absolute top-0 left-0 h-full ${colors.fill} transition-all duration-1000 ease-out`} 
+                                style={{ width: `${progress}%` }}
+                            ></div>
+                        </div>
+                        
+                        <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 z-10 text-gray-800">
+                            <div className="flex items-center gap-3 w-[65%] bg-white/70 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20">
+                                {isCompleted ? <i data-lucide="check-circle-2" className="text-green-700 w-4 h-4 min-w-max"></i> : (isOverdue ? <i data-lucide="alert-circle" className="text-red-600 w-4 h-4 min-w-max"></i> : <i data-lucide="grip-vertical" className="text-gray-400 w-4 h-4 min-w-max"></i>)}
+                                
+                                <div className="flex flex-col w-full">
+                                    <div className="flex items-center gap-1.5">
+                                        <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 opacity-90 ${isOverdue ? 'text-red-700' : (project.Jabatan === 'Pentadbiran' ? 'text-blue-700' : project.Jabatan === 'Akademik' ? 'text-orange-700' : 'text-green-700')}`} title={project.Jabatan}></i>
+                                        <span className={`font-semibold text-sm truncate ${isOverdue ? 'text-red-800' : 'text-gray-800'}`}>
+                                            {project.Projek}
+                                        </span>
+                                        {project.Catatan && (
+                                            <div className="relative group/tooltip flex items-center">
+                                                <svg className="w-4 h-4 text-purple-500 opacity-80 flex-shrink-0 cursor-help" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 9h6"/><path d="M9 13h6"/>
+                                                </svg>
+                                                <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 md:w-72 bg-gray-700 text-white rounded-md p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[999] shadow-xl font-normal text-xs whitespace-normal break-words leading-relaxed pointer-events-none">
+                                                    <span className="text-gray-300 font-semibold block mb-0.5">Catatan:</span>
+                                                    {project.Catatan}
+                                                    <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 border-[6px] border-transparent border-r-gray-700"></div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                    <span className="text-[10px] text-gray-500 font-medium hidden md:block mt-0.5">
+                                        Dirancang: {project.TarikhAsal || 'Tiada'} | Dijangka: {project.TarikhSebenar || project.TarikhAkhir || 'Tiada'}
+                                    </span>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-2">
+                                <span className={`text-xs font-bold bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20 cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800'}`} title="Peratus Kemajuan">
+                                    {progress}%
+                                </span>
+                                <span className={`flex items-center gap-1.5 text-xs font-medium bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm whitespace-nowrap border border-white/20 hidden sm:flex cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800'}`} title="Peratus Masa">
+                                    <i data-lucide="clock" className="w-3 h-3"></i>
+                                    {calculateDaySpentPercentage(project.TarikhMula, project.TarikhAsal)}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const QuadrantBox = ({ title, category, icon, bgColor, borderColor, titleColor }) => {
+                const [isDragOver, setIsDragOver] = useState(false);
+                let qProjects = activeProjects.filter(p => (p.Kepentingan || 'Belum Ditetapkan') === category);
+
+                qProjects.sort((a, b) => {
+                    if (activeMatrixSortConfig === 'taktikal') {
+                        const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                        const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                        
+                        if (isOverdueA && !isOverdueB) return -1;
+                        if (!isOverdueA && isOverdueB) return 1;
+                        
+                        if (isOverdueA && isOverdueB) {
+                            const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                            const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                            return daySpentB - daySpentA;
+                        }
+                        
+                        return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                    } else if (activeMatrixSortConfig === 'prog_desc') {
+                        return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                    } else if (activeMatrixSortConfig === 'prog_asc') {
+                        return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                    } else if (activeMatrixSortConfig === 'date_asc') {
+                        const dateA = parseDateForSort(a.TarikhAsal);
+                        const dateB = parseDateForSort(b.TarikhAsal);
+                        if (dateA === 0 && dateB === 0) return 0;
+                        if (dateA === 0) return 1; 
+                        if (dateB === 0) return -1;
+                        return dateA - dateB;
+                    }
+                    return 0;
+                });
+
+                return (
+                    <div 
+                        onDragOver={(e) => { 
+                            handleDragOver(e); 
+                            setIsDragOver(true); 
+                        }}
+                        onDragLeave={() => setIsDragOver(false)}
+                        onDrop={(e) => { 
+                            handleDrop(e, category); 
+                            setIsDragOver(false); 
+                        }}
+                        className={`flex flex-col rounded-xl border-2 border-dashed ${borderColor} bg-white min-h-[160px] transition-all relative group shadow-sm ${isDragOver ? 'ring-4 ring-blue-300 opacity-80' : ''}`}
+                    >
+                        <div className={`px-4 py-2 flex items-center gap-2 ${bgColor} rounded-t-lg border-b ${borderColor}`}>
+                            <i data-lucide={icon} className={`w-4 h-4 ${titleColor}`}></i>
+                            <h3 className={`font-bold text-sm ${titleColor}`}>{title}</h3>
+                            <span className="ml-auto bg-white/50 text-xs px-2 py-0.5 rounded-full font-medium">{qProjects.length}</span>
+                        </div>
+                        <div className="p-3 flex-1 bg-slate-50/50">
+                            {qProjects.length > 0 ? (
+                                qProjects.map(p => <ProjectBar key={p.Projek} project={p} />)
+                            ) : (
+                                <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs italic opacity-70">
+                                    Tarik (drag) projek ke sini
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            return (
+                <>
+                    {/* PAPARAN KANDUNGAN DASHBOARD YANG SENTIASA ADA TETAPI KABUR JIKA BELUM LOG MASUK */}
+                    <div className={`relative min-h-screen bg-gray-50 text-gray-900 pb-16 font-sans fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] ${!isAuthenticated ? 'blur-md opacity-40 pointer-events-none select-none h-screen overflow-hidden' : ''}`}>
+                        
+                        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 pointer-events-auto">
+                            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-x-auto whitespace-nowrap hide-scrollbar">
+                                
+                                <div className="flex items-center gap-4 flex-shrink-0">
+                                    <img src="https://lh3.googleusercontent.com/d/1r-NvG4_QmZsUMM6SQl3U7gUz63Spkqx4" alt="Logo" className="h-12 object-contain" />
+                                    
+                                    <div className="hidden md:flex flex-col justify-center">
+                                        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
+                                        <p className="text-sm text-gray-500 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="hidden lg:block w-px h-10 bg-gray-200 mx-4"></div>
+                                
+                                {/* MENU NAVIGASI PANTAS */}
+                                <div className="hidden lg:flex items-center gap-6 px-2 flex-shrink-0">
+                                    <button onClick={() => document.getElementById('section-timeline')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Sukuan<br/>Tahun</button>
+                                    <button onClick={() => document.getElementById('section-eisenhower')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Matriks<br/>Kepentingan</button>
+                                    <button onClick={() => document.getElementById('section-department')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Mengikut<br/>Sektor</button>
+                                    <button onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Projek<br/>Lengkap</button>
+                                </div>
+                                
+                                <div className="flex items-center gap-3 ml-auto lg:ml-4 flex-shrink-0">
+                                    <button 
+                                        onClick={() => setIsAuthenticated(false)} 
+                                        title="Kunci Papan Pemuka"
+                                        className="flex items-center gap-2 bg-gray-50 text-gray-700 border border-gray-200 hover:bg-gray-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                                    >
+                                        <i data-lucide="lock" className="w-4 h-4 text-gray-500"></i>
+                                        <span className="hidden sm:inline">Kunci</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={() => setShowReportModal(true)} 
+                                        className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                                    >
+                                        <i data-lucide="file-text" className="w-4 h-4"></i><span className="hidden md:inline">Laporan</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={openAddModal} 
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors"
+                                    >
+                                        <i data-lucide="plus" className="w-4 h-4"></i><span className="hidden md:inline">Tambah Projek</span>
+                                    </button>
+                                    
+                                    <button onClick={fetchProjects} disabled={loading} className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 p-2.5 rounded-lg transition-colors shadow-sm">
+                                        <i data-lucide="refresh-cw" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+
+                        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative pointer-events-auto">
+                            
+                            {/* ROLE BADGE */}
+                            <div className="flex justify-end w-full pointer-events-none">
+                                <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 border border-blue-200 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm pointer-events-auto">
+                                    <i data-lucide="shield-check" className="w-4 h-4"></i>Akses: Kakitangan PPS
+                                </span>
+                            </div>
+
+                            {error && (
+                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex items-start gap-3">
+                                    <i data-lucide="alert-circle" className="text-red-500 mt-0.5 w-5 h-5"></i>
+                                    <div>
+                                        <h3 className="text-red-800 font-medium">Nota Makluman / Ralat</h3>
+                                        <p className="text-red-700 text-sm mt-1">{error}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} />
+
+                            <div id="section-eisenhower" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 scroll-mt-20">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                            <i data-lucide="layout-grid" className="w-5 h-5 text-blue-600"></i> Carta Matriks Kepentingan
+                                        </h2>
+                                        <p className="text-sm text-gray-500 mt-1" data-html2canvas-ignore>
+                                            Tarik (drag) dan lepaskan (drop) projek untuk menyusun tahap keutamaannya.
+                                        </p>
+                                    </div>
+                                    <div className="flex items-center gap-2" data-html2canvas-ignore>
+                                        <svg className="w-4 h-4 text-gray-500 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+                                        </svg>
+                                        <select 
+                                            className="text-sm font-bold border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 bg-white shadow-sm cursor-pointer"
+                                            value={activeMatrixSortConfig}
+                                            onChange={(e) => setActiveMatrixSortConfig(e.target.value)}
+                                        >
+                                            <option value="taktikal" title="Susunan taktikal PPS">Taktikal</option>
+                                            <option value="date_asc" title="Tarikh siap (Paling awal)">Tarikh</option>
+                                            <option value="prog_desc" title="Kemajuan tertinggi ke terendah">% ↓</option>
+                                            <option value="prog_asc" title="Kemajuan terendah ke tertinggi">% ↑</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <QuadrantBox title="Penting & Segera (Buat Terus)" category="Penting & Segera" icon="flame" bgColor="bg-red-50" borderColor="border-red-200" titleColor="text-red-700" />
+                                    <QuadrantBox title="Penting, Tak Segera (Rancang)" category="Penting & Tak Segera" icon="calendar-clock" bgColor="bg-blue-50" borderColor="border-blue-200" titleColor="text-blue-700" />
+                                    <QuadrantBox title="Kurang Penting, Segera (Serah)" category="Kurang Penting & Segera" icon="users-round" bgColor="bg-amber-50" borderColor="border-amber-200" titleColor="text-amber-700" />
+                                    <QuadrantBox title="Kurang Penting, Tak Segera (Simpan)" category="Kurang Penting & Tak Segera" icon="archive" bgColor="bg-gray-100" borderColor="border-gray-300" titleColor="text-gray-600" />
+                                </div>
+
+                                {activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').length > 0 && (
+                                    <div 
+                                        className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-xl bg-white transition-all" 
+                                        onDragOver={(e) => handleDragOver(e)} 
+                                        onDrop={(e) => handleDrop(e, 'Belum Ditetapkan')}
+                                    >
+                                        <h3 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2"><i data-lucide="help-circle" className="w-4 h-4"></i> Projek Belum Ditetapkan Kepentingan</h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                            {activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').map(p => (
+                                                <ProjectBar key={p.Projek} project={p} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div id="section-department" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 scroll-mt-20">
+                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                        <i data-lucide="building-2" className="w-5 h-5 text-blue-600"></i> Projek Mengikut Sektor
+                                    </h2>
+                                    <div className="flex items-center gap-2" data-html2canvas-ignore>
+                                        <svg className="w-4 h-4 text-gray-500 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
+                                        </svg>
+                                        <select 
+                                            className="text-sm font-bold border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 bg-white shadow-sm cursor-pointer"
+                                            value={activeSortConfig}
+                                            onChange={(e) => setActiveSortConfig(e.target.value)}
+                                        >
+                                            <option value="taktikal" title="Susunan taktikal PPS">Taktikal</option>
+                                            <option value="date_asc" title="Tarikh siap (Paling awal)">Tarikh</option>
+                                            <option value="prog_desc" title="Kemajuan tertinggi ke terendah">% ↓</option>
+                                            <option value="prog_asc" title="Kemajuan terendah ke tertinggi">% ↑</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    {Object.entries(departmentConfig).map(([deptName, config]) => {
+                                        let deptProjects = activeProjects.filter(p => p.Jabatan === deptName);
+                                        
+                                        deptProjects.sort((a, b) => {
+                                            if (activeSortConfig === 'taktikal') {
+                                                const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                                                const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                                                
+                                                if (isOverdueA && !isOverdueB) return -1;
+                                                if (!isOverdueA && isOverdueB) return 1;
+                                                
+                                                if (isOverdueA && isOverdueB) {
+                                                    const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                                                    const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                                                    return daySpentB - daySpentA;
+                                                }
+                                                
+                                                return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                            } else if (activeSortConfig === 'prog_desc') {
+                                                return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                            } else if (activeSortConfig === 'prog_asc') {
+                                                return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                                            } else if (activeSortConfig === 'date_asc') {
+                                                const dateA = parseDateForSort(a.TarikhAsal);
+                                                const dateB = parseDateForSort(b.TarikhAsal);
+                                                if (dateA === 0 && dateB === 0) return 0;
+                                                if (dateA === 0) return 1; 
+                                                if (dateB === 0) return -1;
+                                                return dateA - dateB;
+                                            }
+                                            return 0;
+                                        });
+
+                                        return (
+                                            <div key={deptName} className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200">
+                                                <div className={`${config.headerBg} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
+                                                    <div className="flex items-center gap-2">
+                                                        <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
+                                                        <h3 className="font-bold">{deptName}</h3>
+                                                    </div>
+                                                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{deptProjects.length}</span>
+                                                </div>
+                                                <div className="p-4 flex-1 bg-gray-50/50">
+                                                    {deptProjects.map((project, index) => <ProjectBar key={index} project={project} />)}
+                                                    {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">Tiada projek direkodkan.</div>}
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+
+                            <div id="section-completed" className="mt-8 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-20">
+                                <div className="bg-purple-500 px-6 py-4 text-white flex items-center gap-3">
+                                    <i data-lucide="check-circle" className="text-purple-100 w-6 h-6"></i>
+                                    <h2 className="text-lg font-bold tracking-wide">PROJEK LENGKAP</h2>
+                                </div>
+                                <div className="overflow-x-auto pb-4">
+                                    <table className="w-full text-sm text-left text-gray-600">
+                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                                            <tr>
+                                                <th className="px-6 py-4 font-semibold">Bil</th>
+                                                <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('Projek')}>
+                                                    <div className="flex items-center w-max">Projek {renderSortIcon('Projek')}</div>
+                                                </th>
+                                                <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('TarikhMula')}>
+                                                    <div className="flex items-center w-max">Tarikh Mula {renderSortIcon('TarikhMula')}</div>
+                                                </th>
+                                                <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('TarikhSebenar')}>
+                                                    <div className="flex items-center w-max">Tarikh Siap {renderSortIcon('TarikhSebenar')}</div>
+                                                </th>
+                                                <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('Jabatan')}>
+                                                    <div className="flex items-center w-max">Bahagian {renderSortIcon('Jabatan')}</div>
+                                                </th>
+                                                <th className="px-6 py-4 font-semibold text-center" data-html2canvas-ignore>Tindakan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {sortedCompletedProjects.map((project, index) => (
+                                                <tr key={index} className="bg-white border-b hover:bg-purple-50/50 transition-colors">
+                                                    <td className="px-6 py-3 font-medium text-gray-900">{index + 1}</td>
+                                                    
+                                                    <td className="px-6 py-3 font-semibold text-gray-800">
+                                                        <div className="flex items-center gap-1.5 w-max">
+                                                            <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 ${project.Jabatan === 'Pentadbiran' ? 'text-blue-600' : project.Jabatan === 'Akademik' ? 'text-orange-600' : 'text-green-600'}`} title={project.Jabatan}></i>
+                                                            <span>{project.Projek}</span>
+                                                            {project.Catatan && (
+                                                                <div className="relative group/tooltip flex items-center">
+                                                                    <svg className="w-4 h-4 text-purple-500 opacity-80 flex-shrink-0 cursor-help" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 9h6"/><path d="M9 13h6"/>
+                                                                    </svg>
+                                                                    <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 md:w-72 bg-gray-700 text-white rounded-md p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[999] shadow-xl font-normal text-xs whitespace-normal break-words leading-relaxed pointer-events-none">
+                                                                        <span className="text-gray-300 font-semibold block mb-0.5">Catatan:</span>
+                                                                        {project.Catatan}
+                                                                        <div className="absolute top-1/2 -left-1.5 -translate-y-1/2 border-[6px] border-transparent border-r-gray-700"></div>
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="px-6 py-3">{project.TarikhMula || '-'}</td>
+                                                    <td className="px-6 py-3 text-purple-700 font-medium">{project.TarikhSebenar || project.TarikhAkhir || '-'}</td>
+                                                    <td className="px-6 py-3">{project.Jabatan}</td>
+                                                    <td className="px-6 py-3 text-center" data-html2canvas-ignore>
+                                                        <button onClick={() => handleEditClick(project)} className="text-blue-600 hover:text-blue-800 font-medium">Lihat Butiran</button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+
+                    {/* ========================================================= */}
+                    {/* OVERLAY LOG MASUK (TEMPLATE KHAS TERKINI) */}
+                    {/* ========================================================= */}
+                    {!isAuthenticated && (
+                        <div className="login-overlay">
+                            <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full border border-slate-100 flex flex-col items-center relative">
+                                
+                                <img src="https://lh3.googleusercontent.com/d/1r-NvG4_QmZsUMM6SQl3U7gUz63Spkqx4" alt="Logo" className="h-16 mb-6 object-contain drop-shadow-sm" />
+                                
+                                <h2 className="text-xl font-bold text-slate-800 mb-2 text-center">Pengesahan Akses</h2>
+                                
+                                <p className="text-slate-500 text-sm text-center mb-6">
+                                    Sila masukkan kata laluan untuk meneruskan tindakan ini.
+                                </p>
+                                
+                                <div className={`w-full mb-4 relative ${overlayShaking ? 'shake' : ''}`}>
+                                    <i data-lucide="lock" className="w-5 h-5 absolute left-3 top-2.5 text-slate-400"></i>
+                                    
+                                    <input 
+                                        type="password" 
+                                        id="overlayPasswordInput" 
+                                        placeholder="Kata Laluan" 
+                                        value={overlayPassword}
+                                        onChange={(e) => { setOverlayPassword(e.target.value); setOverlayError(false); }}
+                                        onKeyPress={(e) => { if (e.key === 'Enter') handleOverlayLogin(); }}
+                                        className={`w-full pl-10 pr-4 py-2 bg-slate-50 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all ${overlayError ? 'border-red-500 bg-red-50 focus:ring-red-500' : 'border-slate-200'}`}
+                                    />
+                                    
+                                    {overlayError && <p className="text-red-500 text-xs mt-2 font-medium text-center">Kata laluan tidak sah.</p>}
+                                </div>
+                                
+                                <div className="flex w-full mt-2">
+                                    <button 
+                                        type="button" 
+                                        onClick={handleOverlayLogin} 
+                                        className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition-colors shadow-md"
+                                    >
+                                        Log Masuk
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* MODAL JANA & MUAT TURUN LAPORAN PDF */}
+                    {/* ========================================================= */}
+                    {showReportModal && (
+                        <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
+                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in border border-gray-100">
+                                <div className="bg-emerald-600 px-5 py-4 text-white flex justify-between items-center">
+                                    <div className="flex items-center gap-2">
+                                        <i data-lucide="file-down" className="w-5 h-5 text-emerald-100"></i>
+                                        <h3 className="font-bold text-lg">Muat Turun Laporan</h3>
+                                    </div>
+                                    <button onClick={() => setShowReportModal(false)} className="text-emerald-100 hover:text-white"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                
+                                <form onSubmit={generateAndSendReport} className="p-6">
+                                    {reportSuccess ? (
+                                        <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg text-center font-medium">
+                                            <i data-lucide="check-circle" className="w-8 h-8 mx-auto mb-2 text-green-500"></i>
+                                            {reportSuccess}
+                                        </div>
+                                    ) : (
+                                        <>
+                                            <p className="text-sm text-gray-600 mb-5">Pilih kandungan untuk laporan PDF anda. Laporan akan terus dimuat turun (download) ke dalam peranti anda.</p>
+
+                                            <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
+                                                <label className="block text-sm font-bold text-gray-700 mb-3">Pilih Kandungan Laporan:</label>
+                                                <div className="space-y-2.5">
+                                                    <label className="flex items-center gap-3 cursor-pointer">
+                                                        <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.timeline} onChange={(e) => setReportSelections({...reportSelections, timeline: e.target.checked})} />
+                                                        <span className="text-sm text-gray-700">Carta Sukuan Tahun</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-3 cursor-pointer">
+                                                        <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.eisenhower} onChange={(e) => setReportSelections({...reportSelections, eisenhower: e.target.checked})} />
+                                                        <span className="text-sm text-gray-700">Carta Matriks Kepentingan</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-3 cursor-pointer">
+                                                        <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.department} onChange={(e) => setReportSelections({...reportSelections, department: e.target.checked})} />
+                                                        <span className="text-sm text-gray-700">Projek Mengikut Sektor</span>
+                                                    </label>
+                                                    <label className="flex items-center gap-3 cursor-pointer">
+                                                        <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.completed} onChange={(e) => setReportSelections({...reportSelections, completed: e.target.checked})} />
+                                                        <span className="text-sm text-gray-700">Projek Lengkap</span>
+                                                    </label>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex gap-3">
+                                                <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium transition-colors text-sm">Batal</button>
+                                                <button 
+                                                    type="submit" 
+                                                    disabled={isGeneratingReport || (!reportSelections.timeline && !reportSelections.eisenhower && !reportSelections.department && !reportSelections.completed)} 
+                                                    className={`flex-1 px-4 py-2.5 rounded-md font-medium flex justify-center items-center gap-2 transition-colors text-sm shadow-sm bg-emerald-600 text-white hover:bg-emerald-700 disabled:opacity-70`}
+                                                >
+                                                    {isGeneratingReport ? <><i data-lucide="refresh-cw" className="w-4 h-4 animate-spin"></i> Menjana...</> : 'Muat Turun PDF'}
+                                                </button>
+                                            </div>
+                                        </>
+                                    )}
+                                </form>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* MODAL TAMBAH/KEMASKINI PROJEK */}
+                    {showModal && (
+                        <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[100] p-4 pt-20 md:pt-24">
+                            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden fade-in">
+                                <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
+                                    <h3 className="font-bold text-lg text-gray-800">{isEditing ? 'Maklumat Projek' : 'Tambah Projek Baru'}</h3>
+                                    <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><i data-lucide="x" className="w-5 h-5"></i></button>
+                                </div>
+                                
+                                <form onSubmit={handleSaveProject} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
+                                    
+                                    {formError && (
+                                        <div className="bg-red-50 text-red-600 p-3 rounded-md text-sm font-medium border border-red-200">
+                                            <i data-lucide="alert-circle" className="inline w-4 h-4 mr-2 mb-0.5"></i>
+                                            {formError}
+                                        </div>
+                                    )}
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Bahagian / Jabatan</label>
+                                        <select className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Jabatan} onChange={(e) => setFormData({...formData, Jabatan: e.target.value})}>
+                                            <option value="Pentadbiran">Pentadbiran</option>
+                                            <option value="Akademik">Akademik</option>
+                                            <option value="Hal Ehwal Siswazah">Hal Ehwal Siswazah</option>
+                                        </select>
+                                    </div>
+                                    
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama Projek</label>
+                                        <input type="text" required placeholder="Cth: Sistem E-Filing Baru" className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Projek} onChange={(e) => setFormData({...formData, Projek: e.target.value})} />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Kepentingan</label>
+                                        <select className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Kepentingan} onChange={(e) => setFormData({...formData, Kepentingan: e.target.value})}>
+                                            <option value="Belum Ditetapkan">- Sila Pilih (Atau drag di luar nanti) -</option>
+                                            <option value="Penting & Segera">Penting & Segera (Merah)</option>
+                                            <option value="Penting & Tak Segera">Penting & Tak Segera (Biru)</option>
+                                            <option value="Kurang Penting & Segera">Kurang Penting & Segera (Kuning)</option>
+                                            <option value="Kurang Penting & Tak Segera">Kurang Penting & Tak Segera (Kelabu)</option>
+                                        </select>
+                                    </div>
+
+                                    <div className="flex gap-4 items-center pt-2">
+                                        <div className="flex-1">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Mula</label>
+                                            <input type="date" className="w-full border border-gray-300 rounded-md p-2 outline-none cursor-pointer text-sm" value={toInputDate(formData.TarikhMula)} onChange={(e) => setFormData({...formData, TarikhMula: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                        </div>
+                                        <div className="w-24">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Kemajuan</label>
+                                            <div className="flex items-center gap-1 border border-gray-300 rounded-md p-2">
+                                                <input type="number" min="0" max="100" required className="w-full outline-none text-center text-sm" value={formData.Kemajuan} onChange={(e) => setFormData({...formData, Kemajuan: e.target.value})} />
+                                                <span className="text-gray-500 text-sm">%</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-4">
+                                        <div className="w-1/2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Siap (Dirancang)</label>
+                                            <input type="date" className="w-full border border-gray-300 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhAsal)} onChange={(e) => setFormData({...formData, TarikhAsal: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                        </div>
+                                        <div className="w-1/2">
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Siap (Dijangka)</label>
+                                            <input type="date" required={parseInt(formData.Kemajuan) === 100} className="w-full border border-gray-300 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhSebenar)} onChange={(e) => setFormData({...formData, TarikhSebenar: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
+                                        <textarea 
+                                            rows="2" 
+                                            placeholder="Nota tambahan (pilihan)" 
+                                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" 
+                                            value={formData.Catatan} 
+                                            onChange={(e) => setFormData({...formData, Catatan: e.target.value})}
+                                        ></textarea>
+                                    </div>
+
+                                    {showConfirmDelete ? (
+                                        <div className="pt-2">
+                                            <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                                                <p className="text-red-800 text-sm font-medium mb-3 text-center">Adakah anda pasti mahu membuang projek ini secara kekal?</p>
+                                                <div className="flex gap-2">
+                                                    <button type="button" onClick={() => setShowConfirmDelete(false)} disabled={isSubmitting} className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium text-sm transition-colors">Batal</button>
+                                                    <button 
+                                                        type="button" 
+                                                        onClick={executeDelete} 
+                                                        disabled={isSubmitting} 
+                                                        className="flex-1 px-3 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 font-medium text-sm flex justify-center items-center gap-2 transition-colors"
+                                                    >
+                                                        {isSubmitting ? <span className="animate-spin"><i data-lucide="refresh-cw" className="w-4 h-4"></i></span> : 'Ya, Buang'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div className="pt-4 flex flex-col gap-2">
+                                            <div className="flex gap-2">
+                                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 font-medium transition-colors">Batal</button>
+                                                <button 
+                                                    type="submit" 
+                                                    disabled={isSubmitting} 
+                                                    className={`flex-1 px-4 py-2 rounded-md font-medium disabled:opacity-70 flex justify-center items-center gap-2 transition-colors bg-blue-600 text-white hover:bg-blue-700`}
+                                                >
+                                                    {isSubmitting ? <span className="animate-spin"><i data-lucide="refresh-cw" className="w-4 h-4"></i></span> : 'Simpan'}
+                                                </button>
+                                            </div>
+                                            {isEditing && (
+                                                <button 
+                                                    type="button" 
+                                                    onClick={() => { setShowConfirmDelete(true); }} 
+                                                    disabled={isSubmitting} 
+                                                    className={`w-full px-4 py-2 rounded-md font-medium disabled:opacity-70 flex justify-center items-center gap-2 mt-1 transition-colors bg-red-100 text-red-600 hover:bg-red-200`}
+                                                >
+                                                    Buang Projek
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                </form>
+                            </div>
+                        </div>
+                    )}
+                </>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('pps-dashboard-root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
