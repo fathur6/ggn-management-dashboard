@@ -79,6 +79,15 @@
 
     <div id="pps-dashboard-root"></div>
 
+    <div id="pps-dashboard-root"></div>
+
+    <script id="gas-data" type="application/json">
+        {
+            "userEmail": "<?= userEmail ?>",
+            "adminList": <?!= adminList || "[]" ?>
+        }
+    </script>
+
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
@@ -90,21 +99,24 @@
 
         function App() {
             // =================================================================
-            // PENGURUSAN OAUTH & AKSES ADMIN
+            // PENGURUSAN OAUTH & AKSES ADMIN (VERSI SELAMAT & KALIS CRASH)
             // =================================================================
-            const rawServerEmail = "<?= userEmail ?>"; 
+            let serverUserEmail = "pps@unisza.edu.my"; 
+            let initialAdmins = ["pps@unisza.edu.my", "fathurrahman@unisza.edu.my"];
             
-            // Menggunakan tag "!= " supaya array JSON tidak rosak oleh HtmlService
-            const rawAdminList = `<?!= adminList ?>`;
+            try {
+                const gasDataContent = document.getElementById('gas-data').textContent;
+                // Semak jika ia dibuka di server Google (Simbol <? telah hilang)
+                if (gasDataContent.indexOf("<?") === -1) {
+                    const parsedData = JSON.parse(gasDataContent);
+                    serverUserEmail = parsedData.userEmail;
+                    initialAdmins = parsedData.adminList;
+                }
+            } catch(e) {
+                console.warn("Local Dev Mode: Menggunakan data mock.");
+            }
 
-            // Trik pemisahan "<" + "?" bagi mengelak Google terkeliru
-            const isLocalDev = rawServerEmail.indexOf("<" + "?") !== -1;
-            
-            const currentUserEmail = isLocalDev ? "pps@unisza.edu.my" : rawServerEmail;
-            const initialAdmins = isLocalDev 
-                ? ["pps@unisza.edu.my", "fathurrahman@unisza.edu.my"] 
-                : JSON.parse(rawAdminList || '[]');
-
+            const currentUserEmail = serverUserEmail;
             const [adminList, setAdminList] = useState(initialAdmins);
             const [isAuthenticated, setIsAuthenticated] = useState(false);
             const [userRole, setUserRole] = useState('viewer');
