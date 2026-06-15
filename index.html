@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GGN Management Plan</title>
-    <!-- Google Fonts & FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Tailwind CSS (via CDN) -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -23,14 +21,10 @@
         }
     </script>
 
-    <!-- React & ReactDOM (via CDN) -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
-    <!-- Babel untuk compile JSX dalam browser -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- HTML2Canvas & jsPDF untuk Fungsi Penjanaan Laporan PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
@@ -83,15 +77,13 @@
 </head>
 <body>
 
-    <!-- Container di mana Dashboard akan dipaparkan -->
     <div id="pps-dashboard-root"></div>
 
-    <!-- Skrip Aplikasi (React & JSX) -->
     <script type="text/babel">
         const { useState, useEffect, useMemo } = React;
 
         // ============================================================================
-        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA (VERSI TERKINI)
+        // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA
         // ============================================================================
         const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/export?format=csv&gid=0"; 
         const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B/exec"; 
@@ -101,11 +93,15 @@
             // PENGURUSAN OAUTH & AKSES ADMIN
             // =================================================================
             const rawServerEmail = "<?= userEmail ?>"; 
-            const rawAdminList = '<?= adminList ?>';
+            
+            // Menggunakan tag "!= " supaya array JSON tidak rosak oleh HtmlService
+            const rawAdminList = `<?!= adminList ?>`;
 
-            // Jika dibuka di VS Code (Local Dev), mock data email. Jika di web, guna email sebenar.
-            const currentUserEmail = rawServerEmail.includes("<?") ? "pps@unisza.edu.my" : rawServerEmail;
-            const initialAdmins = rawAdminList.includes("<?") 
+            // Trik pemisahan "<" + "?" bagi mengelak Google terkeliru
+            const isLocalDev = rawServerEmail.indexOf("<" + "?") !== -1;
+            
+            const currentUserEmail = isLocalDev ? "pps@unisza.edu.my" : rawServerEmail;
+            const initialAdmins = isLocalDev 
                 ? ["pps@unisza.edu.my", "fathurrahman@unisza.edu.my"] 
                 : JSON.parse(rawAdminList || '[]');
 
@@ -168,7 +164,7 @@
                 lucide.createIcons();
             });
 
-            // Tarik data sebaik laman web dibuka (di belakang tabir)
+            // Tarik data sebaik laman web dibuka
             useEffect(() => {
                 fetchProjects();
             }, []);
@@ -179,7 +175,7 @@
             };
 
             // =================================================================
-            // FUNGSI PENGURUSAN ADMIN (BARU)
+            // FUNGSI PENGURUSAN ADMIN
             // =================================================================
             const handleAddAdmin = (e) => {
                 e.preventDefault();
