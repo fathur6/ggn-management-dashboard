@@ -10,34 +10,43 @@
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
- * 3. Deployment Method: Always deploy via clasp CLI to maintain GitOps workflow:
- * `clasp push && clasp deploy`
+ * 3. Deployment Method: `clasp push && clasp deploy`
  * ============================================================================
  */
 
-/**
- * Main function to serve the Web App
- * This handles Google OAuth authentication automatically based on deployment settings.
- */
 function doGet() {
-  // Get active user email via Google OAuth
   const userEmail = Session.getActiveUser().getEmail();
-  
-  // Create HTML Template from index.html
   const template = HtmlService.createTemplateFromFile('index');
   
-  // Pass variables to the frontend if needed
+  // Dapatkan senarai admin dari memori Apps Script
+  const props = PropertiesService.getScriptProperties();
+  let admins = props.getProperty('ADMIN_EMAILS');
+  
+  // Jika senarai kosong (kali pertama run), masukkan senarai asal yang anda berikan
+  if (!admins) {
+    const defaultAdmins = [
+      "pps@unisza.edu.my", "fathurrahman@unisza.edu.my", "mutiasobihah@unisza.edu.my", 
+      "whishamudin@unisza.edu.my", "yusnitayusof@unisza.edu.my", "fairuznasir@unisza.edu.my", 
+      "fatinhannani@unisza.edu.my", "ariffahimi@unisza.edu.my", "azuhazana@unisza.edu.my", 
+      "afiqahnorozi@unisza.edu.my", "muhammadhamizan@unisza.edu.my", "shuhadaaziz@unisza.edu.my"
+    ];
+    admins = JSON.stringify(defaultAdmins);
+    props.setProperty('ADMIN_EMAILS', admins);
+  }
+  
   template.userEmail = userEmail;
+  template.adminList = admins;
 
   return template.evaluate()
     .setTitle('Pelan Taktikal PPS')
     .addMetaTag('viewport', 'width=device-width, initial-scale=1')
-    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL); // Critical for Google Sites embedding
+    .setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
 }
 
 /**
- * Helper function to include other files if necessary
+ * Fungsi untuk dipanggil dari Frontend bagi menyimpan senarai Admin terkini
  */
-function include(filename) {
-  return HtmlService.createHtmlOutputFromFile(filename).getContent();
+function saveAdminsToServer(newAdminsList) {
+  PropertiesService.getScriptProperties().setProperty('ADMIN_EMAILS', JSON.stringify(newAdminsList));
+  return true;
 }
