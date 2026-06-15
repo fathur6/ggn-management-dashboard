@@ -4,16 +4,21 @@
  * ============================================================================
  *
  * Repository: ggn-management-dashboard
- * Script ID: 1QeAMMWgUbJuCWrgXZybiuFCc5L9yCK3ywF6KnSpmFScxld9JCBSLc_eF
+ * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
  * Web App URL: https://script.google.com/macros/s/AKfycbza27T_x_wropHa1aQcBgjfZuQnB72Zds1PaXLk8ICHZ7_JudpTGjz2Uc1DjxlfoBM9/exec
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
- * 3. Deployment Method: `clasp push && clasp deploy`
+ * 3. Deployment Method: Always deploy via clasp CLI to maintain GitOps workflow:
+ * `clasp push && clasp deploy`
  * ============================================================================
  */
 
+/**
+ * Main function to serve the Web App
+ * This handles Google OAuth authentication automatically based on deployment settings.
+ */
 function doGet() {
   const userEmail = Session.getActiveUser().getEmail();
   const template = HtmlService.createTemplateFromFile('index');
@@ -49,4 +54,61 @@ function doGet() {
 function saveAdminsToServer(newAdminsList) {
   PropertiesService.getScriptProperties().setProperty('ADMIN_EMAILS', JSON.stringify(newAdminsList));
   return true;
+}
+
+/**
+ * Mengendalikan permintaan HTTP POST dari Frontend untuk operasi CRUD Projek
+ */
+function doPost(e) {
+  var data = JSON.parse(e.postData.contents);
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Status Projek PPS");
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify({ "status": "ralat", "mesej": "Sheet 'Status Projek PPS' tidak dijumpai" })).setMimeType(ContentService.MimeType.JSON);
+  }
+
+  // FUNGSI 1: TAMBAH PROJEK BARU
+  if (data.action === 'add') {
+    sheet.appendRow([
+      data.Timestamp, data.Jabatan, data.Projek, data.TarikhMula, 
+      data.Kemajuan, data.TarikhAsal, data.TarikhSebenar, data.Kepentingan, data.Catatan
+    ]);
+    return ContentService.createTextOutput(JSON.stringify({ "status": "berjaya" })).setMimeType(ContentService.MimeType.JSON);
+  }
+  
+  // FUNGSI 2: KEMASKINI PROJEK
+  if (data.action === 'update') {
+    var dataRange = sheet.getDataRange();
+    var values = dataRange.getValues();
+    
+    for (var i = 1; i < values.length; i++) {
+      if (values[i][2] === data.oldProjek) { 
+        var rowNum = i + 1; 
+        sheet.getRange(rowNum, 1).setValue(data.Timestamp);
+        sheet.getRange(rowNum, 2).setValue(data.Jabatan);
+        sheet.getRange(rowNum, 3).setValue(data.Projek);
+        sheet.getRange(rowNum, 4).setValue(data.TarikhMula);
+        sheet.getRange(rowNum, 5).setValue(data.Kemajuan);
+        sheet.getRange(rowNum, 6).setValue(data.TarikhAsal);
+        sheet.getRange(rowNum, 7).setValue(data.TarikhSebenar);
+        sheet.getRange(rowNum, 8).setValue(data.Kepentingan); 
+        sheet.getRange(rowNum, 9).setValue(data.Catatan);     
+        return ContentService.createTextOutput(JSON.stringify({ "status": "berjaya dikemaskini" })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  }
+
+  // FUNGSI 3: BUANG PROJEK
+  if (data.action === 'delete') {
+    var dataRange = sheet.getDataRange();
+    var values = dataRange.getValues();
+    
+    for (var i = 1; i < values.length; i++) {
+      if (values[i][2] === data.oldProjek) { 
+        var rowNum = i + 1;
+        sheet.deleteRow(rowNum); 
+        return ContentService.createTextOutput(JSON.stringify({ "status": "berjaya dipadam" })).setMimeType(ContentService.MimeType.JSON);
+      }
+    }
+  }
 }
