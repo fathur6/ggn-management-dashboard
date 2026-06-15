@@ -5,7 +5,7 @@
  *
  * Repository: ggn-management-dashboard
  * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
- * Web App URL: https://script.google.com/macros/s/AKfycbza27T_x_wropHa1aQcBgjfZuQnB72Zds1PaXLk8ICHZ7_JudpTGjz2Uc1DjxlfoBM9/exec
+ * Web App URL: https://script.google.com/macros/s/AKfycbwfiX_t_P0e8qJWfX80d7Myb4K0WH9KTlEPzxfjzxCcKhi3xI2IHSrguZR1E7RZlahh/exec
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
