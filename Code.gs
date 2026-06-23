@@ -5,15 +5,15 @@
  *
  * Repository: ggn-management-dashboard
  * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
- * Deployment ID: AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B
- * Web App URL: https://script.google.com/macros/s/AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B/exec
+ * Deployment ID: AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV
+ * Web App URL: https://script.google.com/macros/s/AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV/exec
  * Target Spreadsheet ID: 1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
  * 3. Deployment Method (To keep URL unchanged):
- * `clasp push && clasp deploy -i AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B -d "Update version"`
+ * `clasp push && clasp deploy -i AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV -d "Update version"`
  * ============================================================================
  */
 

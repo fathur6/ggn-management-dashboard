@@ -103,7 +103,7 @@
         // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA (VERSI TERKINI)
         // ============================================================================
         const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/gviz/tq?tqx=out:csv&gid=0"; 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbziNruL_A5GWYr4x0bqLrkFAKLy-uCqsnl_SXvOb0CrDVP6Kit3ghQ84tXQRdxIHD5B/exec"; 
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV/exec"; 
 
         function App() {
             // =================================================================
@@ -1368,9 +1368,31 @@
                              <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white max-w-md w-full text-center fade-in">
                                   <i data-lucide="shield-alert" className="w-16 h-16 text-red-500 mx-auto mb-4"></i>
                                   <h2 className="text-2xl font-bold text-slate-800 mb-2">Akses Dihadkan</h2>
-                                  <p className="text-slate-600 mb-6 leading-relaxed">
-                                      Akaun anda (<span className="font-semibold text-slate-800">{currentUserEmail}</span>) tidak mempunyai kebenaran untuk melihat butiran taktikal PPS.
+                                  <p className="text-slate-600 mb-2 leading-relaxed">
+                                      Modul ini hanya boleh diakses menggunakan akaun <span className="font-semibold text-slate-800">@unisza.edu.my</span>.
                                   </p>
+                                  <p className="text-slate-600 mb-6 leading-relaxed">
+                                      Akaun anda (<span className="font-semibold text-slate-800">{currentUserEmail}</span>) bukan akaun yang dibenarkan.
+                                  </p>
+
+                                  <a
+                                      href={`https://accounts.google.com/AccountChooser?continue=${encodeURIComponent(GOOGLE_SCRIPT_URL)}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center justify-center gap-2 w-full bg-unisza-blue hover:bg-blue-800 text-white font-semibold px-5 py-3 rounded-lg transition-colors mb-3"
+                                  >
+                                      <i data-lucide="repeat-2" className="w-4 h-4"></i>
+                                      Tukar Akaun Google
+                                  </a>
+
+                                  <button
+                                      onClick={() => window.location.reload()}
+                                      className="inline-flex items-center justify-center gap-2 w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium px-5 py-2.5 rounded-lg transition-colors mb-4 text-sm"
+                                  >
+                                      <i data-lucide="refresh-cw" className="w-4 h-4"></i>
+                                      Muat Semula Halaman
+                                  </button>
+
                                   <p className="text-xs text-slate-400 font-medium">Sila hubungi pentadbir sistem jika anda memerlukan akses.</p>
                              </div>
                         </div>
