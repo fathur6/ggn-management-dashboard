@@ -986,24 +986,24 @@
                 );
             };
 
-            const StatusPopup = ({ projects, status, color }) => {
+            const StatusPopup = ({ projects, status, color, dept }) => {
                 if (projects.length === 0) return null;
-                const dotColor = color === 'green' ? 'bg-green-500' : color === 'red' ? 'bg-red-500' : color === 'orange' ? 'bg-orange-500' : 'bg-blue-500';
+                const dotColor = color === 'green' ? 'bg-green-400' : color === 'red' ? 'bg-red-400' : color === 'orange' ? 'bg-orange-400' : 'bg-blue-400';
                 return (
-                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-[300] min-w-[200px] bg-gray-800/95 backdrop-blur-md text-white rounded-xl shadow-2xl border border-gray-600 p-2.5 fade-in pointer-events-none">
-                        <div className="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b border-gray-600">
-                            <span className={'w-2 h-2 rounded-full ' + dotColor + ' ring-2 ring-white'}></span>
-                            <span className="text-[11px] font-bold uppercase tracking-wide">{status} ({projects.length})</span>
+                    <div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 w-64 bg-gray-800 text-white rounded-xl p-4 transition-all duration-200 shadow-xl z-[60] cursor-default fade-in pointer-events-none">
+                        <div className="text-gray-300 text-xs font-bold mb-2 uppercase tracking-wider border-b border-gray-600 pb-1.5 flex items-center gap-1.5">
+                            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                            {projects.length} Projek {status} ({dept})
                         </div>
-                        <ul className="space-y-1 max-h-36 overflow-y-auto popup-scrollbar">
+                        <ul className="text-left space-y-2.5 mt-2 max-h-48 overflow-y-auto pr-2 popup-scrollbar">
                             {projects.map((p, i) => (
-                                <li key={i} className="flex items-start gap-2 text-xs leading-snug">
-                                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 mt-1.5 flex-shrink-0"></span>
-                                    <span className="flex-1 text-gray-100">{p.Projek}</span>
-                                    <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{p.Kemajuan}%</span>
+                                <li key={i} className="text-sm font-medium leading-snug flex items-start gap-2.5">
+                                    <span className={'w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ' + dotColor}></span>
+                                    <span className="break-words">{p.Projek}</span>
                                 </li>
                             ))}
                         </ul>
+                        <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-[8px] border-transparent border-b-gray-800"></div>
                     </div>
                 );
             };
@@ -1309,15 +1309,15 @@
                                                 <span className="text-xs font-bold text-gray-500 dark:text-slate-400">{dProjects.length}/{total} ({pct}%)</span>
                                             </div>
                                             <div className="relative w-full h-9 bg-gray-100 dark:bg-slate-900 rounded-lg overflow-visible border border-gray-200 dark:border-slate-700 group-hover:ring-2 group-hover:ring-blue-300 transition-all">
-                                                <div className="absolute inset-y-0 left-0 flex overflow-hidden rounded-lg" style={{ width: pct + '%' }}>
+                                                <div className="absolute inset-y-0 left-0 flex overflow-visible rounded-lg" style={{ width: pct + '%' }}>
                                                     {countCompleted > 0 && <div className="relative h-full bg-green-500 transition-all cursor-help" style={{ width: (countCompleted / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'selesai'})} onMouseLeave={() => setHoveredSegment(null)}>
-                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'selesai' && <StatusPopup projects={selesaiProj} status="Selesai" color="green" />}
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'selesai' && <StatusPopup projects={selesaiProj} status="Selesai" color="green" dept={dept} />}
                                                     </div>}
                                                     {countOngoing > 0 && <div className={'relative h-full ' + deptColor + ' transition-all cursor-help'} style={{ width: (countOngoing / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'berjalan'})} onMouseLeave={() => setHoveredSegment(null)}>
-                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'berjalan' && <StatusPopup projects={berjalanProj} status="Sedang Berjalan" color={dept === 'Pentadbiran' ? 'blue' : dept === 'Akademik' ? 'orange' : 'green'} />}
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'berjalan' && <StatusPopup projects={berjalanProj} status="Sedang Berjalan" color={dept === 'Pentadbiran' ? 'blue' : dept === 'Akademik' ? 'orange' : 'green'} dept={dept} />}
                                                     </div>}
                                                     {countOverdue > 0 && <div className="relative h-full bg-red-500 transition-all cursor-help" style={{ width: (countOverdue / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'lewat'})} onMouseLeave={() => setHoveredSegment(null)}>
-                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'lewat' && <StatusPopup projects={lewatProj} status="Lewat" color="red" />}
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'lewat' && <StatusPopup projects={lewatProj} status="Lewat" color="red" dept={dept} />}
                                                     </div>}
                                                 </div>
                                             </div>
