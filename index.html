@@ -228,12 +228,15 @@
                 timeline: true, eisenhower: true, department: true, completed: true
             });
 
-            // Bina ikon Lucide — append SVG anak supaya React tidak crash pada unmount
+            // Bina ikon Lucide (v1 — createElement terima IconNode, bukan string)
             useEffect(() => {
                 document.querySelectorAll('i[data-lucide]:not([data-lucide-done])').forEach(el => {
                     const name = el.getAttribute('data-lucide');
                     if (!name) return;
-                    const svg = lucide.createElement(name, {});
+                    const pascalName = name.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join('');
+                    const iconNode = lucide[pascalName];
+                    if (!iconNode) return;
+                    const svg = lucide.createElement(iconNode, {});
                     svg.setAttribute('aria-hidden', 'true');
                     el.appendChild(svg);
                     el.setAttribute('data-lucide-done', 'true');
