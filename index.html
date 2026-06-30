@@ -228,9 +228,17 @@
                 timeline: true, eisenhower: true, department: true, completed: true
             });
 
-            // Sentiasa bina ikon Lucide selepas render
+            // Bina ikon Lucide — append SVG anak supaya React tidak crash pada unmount
             useEffect(() => {
-                lucide.createIcons();
+                document.querySelectorAll('i[data-lucide]:not([data-lucide-done])').forEach(el => {
+                    const name = el.getAttribute('data-lucide');
+                    if (!name) return;
+                    const svg = lucide.createElement(name);
+                    svg.setAttribute('aria-hidden', 'true');
+                    el.appendChild(svg);
+                    el.setAttribute('data-lucide-done', 'true');
+                    el.style.display = 'inline-flex';
+                });
             });
 
             // Tarik data sebaik laman web dibuka
