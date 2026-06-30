@@ -187,12 +187,14 @@
 
             const handleDeptBarClick = (deptName) => {
                 setSelectedDept(deptName);
-                setActiveTab('sektor');
+                setPanelSelectedDept(deptName);
+                setOpenPanel('sektor');
             };
 
             // =================================================================
             // STATE PROJEK & DASHBOARD
             // =================================================================
+            const [hoveredSegment, setHoveredSegment] = useState(null);
             const [toastMessage, setToastMessage] = useState(null);
             const [projects, setProjects] = useState([]);
             const [loading, setLoading] = useState(true);
@@ -583,24 +585,24 @@
             };
 
             const getBarColor = (dept, progress, isOverdue) => {
-                if (isOverdue) return { bg: 'bg-red-100', fill: 'bg-red-400' };
+                if (isOverdue) return { bg: 'bg-red-50', fill: 'bg-red-300' };
                 const p = parseInt(progress) || 0;
                 if (dept === 'Pentadbiran') {
-                    if (p <= 40) return { bg: 'bg-blue-100', fill: 'bg-blue-400' };
-                    if (p <= 80) return { bg: 'bg-blue-200', fill: 'bg-blue-600' };
-                    return { bg: 'bg-blue-200', fill: 'bg-blue-800' };
+                    if (p <= 40) return { bg: 'bg-blue-50', fill: 'bg-blue-300' };
+                    if (p <= 80) return { bg: 'bg-blue-100', fill: 'bg-blue-400' };
+                    return { bg: 'bg-blue-100', fill: 'bg-blue-500' };
                 }
                 if (dept === 'Akademik') {
-                    if (p <= 40) return { bg: 'bg-orange-100', fill: 'bg-orange-400' };
-                    if (p <= 80) return { bg: 'bg-orange-200', fill: 'bg-orange-600' };
-                    return { bg: 'bg-orange-200', fill: 'bg-orange-800' };
+                    if (p <= 40) return { bg: 'bg-orange-50', fill: 'bg-orange-300' };
+                    if (p <= 80) return { bg: 'bg-orange-100', fill: 'bg-orange-400' };
+                    return { bg: 'bg-orange-100', fill: 'bg-orange-500' };
                 }
                 if (dept === 'Hal Ehwal Siswazah') {
-                    if (p <= 40) return { bg: 'bg-green-100', fill: 'bg-green-400' };
-                    if (p <= 80) return { bg: 'bg-green-200', fill: 'bg-green-600' };
-                    return { bg: 'bg-green-200', fill: 'bg-green-800' };
+                    if (p <= 40) return { bg: 'bg-green-50', fill: 'bg-green-300' };
+                    if (p <= 80) return { bg: 'bg-green-100', fill: 'bg-green-400' };
+                    return { bg: 'bg-green-100', fill: 'bg-green-500' };
                 }
-                return { bg: 'bg-gray-100 dark:bg-slate-800', fill: 'bg-gray-500' };
+                return { bg: 'bg-gray-50 dark:bg-slate-800', fill: 'bg-gray-400' };
             };
 
             const getDeptIcon = (dept) => {
@@ -984,6 +986,28 @@
                 );
             };
 
+            const StatusPopup = ({ projects, status, color }) => {
+                if (projects.length === 0) return null;
+                const dotColor = color === 'green' ? 'bg-green-500' : color === 'red' ? 'bg-red-500' : color === 'orange' ? 'bg-orange-500' : 'bg-blue-500';
+                return (
+                    <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 z-[300] min-w-[200px] bg-gray-800/95 backdrop-blur-md text-white rounded-xl shadow-2xl border border-gray-600 p-2.5 fade-in pointer-events-none">
+                        <div className="flex items-center gap-1.5 pb-1.5 mb-1.5 border-b border-gray-600">
+                            <span className={'w-2 h-2 rounded-full ' + dotColor + ' ring-2 ring-white'}></span>
+                            <span className="text-[11px] font-bold uppercase tracking-wide">{status} ({projects.length})</span>
+                        </div>
+                        <ul className="space-y-1 max-h-36 overflow-y-auto popup-scrollbar">
+                            {projects.map((p, i) => (
+                                <li key={i} className="flex items-start gap-2 text-xs leading-snug">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-white/40 mt-1.5 flex-shrink-0"></span>
+                                    <span className="flex-1 text-gray-100">{p.Projek}</span>
+                                    <span className="text-[10px] text-gray-400 font-mono whitespace-nowrap">{p.Kemajuan}%</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                );
+            };
+
             const ProjectBar = ({ project, isDraggable = true }) => {
                 const progress = parseInt(project.Kemajuan) || 0;
                 const isCompleted = progress === 100;
@@ -1006,13 +1030,13 @@
                         </div>
                         
                         <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 z-10 text-gray-800 dark:text-slate-100">
-                            <div className="flex items-center gap-3 w-[65%] bg-white/70 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20">
+                            <div className="flex items-center gap-3 w-[65%] bg-white/95 backdrop-blur-sm px-2 py-1.5 rounded-md shadow-sm border border-white/30">
                                 {isCompleted ? <i data-lucide="check-circle-2" className="text-green-700 w-4 h-4 min-w-max"></i> : (isOverdue ? <i data-lucide="alert-circle" className="text-red-600 w-4 h-4 min-w-max"></i> : <i data-lucide="grip-vertical" className="text-gray-400 dark:text-slate-500 w-4 h-4 min-w-max"></i>)}
                                 
                                 <div className="flex flex-col w-full">
                                     <div className="flex items-center gap-1.5">
                                         <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 opacity-90 ${isOverdue ? 'text-red-700' : (project.Jabatan === 'Pentadbiran' ? 'text-blue-700' : project.Jabatan === 'Akademik' ? 'text-orange-700' : 'text-green-700')}`} title={project.Jabatan}></i>
-                                        <span className={`font-semibold text-sm truncate ${isOverdue ? 'text-red-800' : 'text-gray-800 dark:text-slate-100'}`}>
+                                        <span className={`font-semibold text-sm truncate ${isOverdue ? 'text-red-800' : 'text-gray-900 dark:text-slate-100'}`}>
                                             {project.Projek}
                                         </span>
                                         {project.Catatan && (
@@ -1036,7 +1060,7 @@
                             
                             <div className="flex items-center gap-2">
                                 <div className="relative group/progress">
-                                    <span className={`text-xs font-bold bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20 cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-slate-100'}`}>
+                                    <span className={`text-xs font-bold bg-white/95 backdrop-blur-sm px-2 py-1.5 rounded-md shadow-sm border border-white/30 cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-slate-100'}`}>
                                         {progress}%
                                     </span>
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-gray-800 text-white text-[10px] rounded px-2 py-1 opacity-0 group-hover/progress:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -1148,8 +1172,8 @@
                             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-x-auto whitespace-nowrap hide-scrollbar">
                                 
                                 <div className="flex items-center gap-4 flex-shrink-0">
-                                    <img src="https://lh3.googleusercontent.com/d/1r-NvG4_QmZsUMM6SQl3U7gUz63Spkqx4" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? 'hidden' : ''}`} />
-                                    <img src="https://i.postimg.cc/gJmCxhJB/GS-logo-color-light.png" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? '' : 'hidden'}`} />
+                                    <img src="__LOGO_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? 'hidden' : ''}`} />
+                                    <img src="__LOGO_DARK_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? '' : 'hidden'}`} />
                                     <div className="hidden md:flex flex-col justify-center">
                                         <h1 className="text-xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
                                         <p className="text-sm text-gray-500 dark:text-slate-400 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
@@ -1271,6 +1295,10 @@
                                     const pct = Math.round((dProjects.length / total) * 100);
                                     const deptColor = dept === 'Pentadbiran' ? 'bg-blue-500' : dept === 'Akademik' ? 'bg-orange-500' : 'bg-green-500';
 
+                                    const selesaiProj = dProjects.filter(p => parseInt(p.Kemajuan) === 100);
+                                    const berjalanProj = dProjects.filter(p => parseInt(p.Kemajuan) !== 100 && !checkIsOverdue(p.TarikhAsal, p.Kemajuan));
+                                    const lewatProj = dProjects.filter(p => checkIsOverdue(p.TarikhAsal, p.Kemajuan));
+
                                     return (
                                         <button key={dept} onClick={() => handleDeptBarClick(dept)} className="w-full text-left group cursor-pointer">
                                             <div className="flex justify-between mb-1.5">
@@ -1280,17 +1308,18 @@
                                                 </span>
                                                 <span className="text-xs font-bold text-gray-500 dark:text-slate-400">{dProjects.length}/{total} ({pct}%)</span>
                                             </div>
-                                            <div className="relative w-full h-9 bg-gray-100 dark:bg-slate-900 rounded-lg overflow-hidden border border-gray-200 dark:border-slate-700 group-hover:ring-2 group-hover:ring-blue-300 transition-all">
-                                                <div className="absolute inset-y-0 left-0 flex" style={{ width: pct + '%' }}>
-                                                    {countCompleted > 0 && <div className="h-full bg-green-500 transition-all" style={{ width: (countCompleted / (dProjects.length || 1)) * 100 + '%' }}></div>}
-                                                    {countOngoing > 0 && <div className={`h-full ${deptColor} transition-all`} style={{ width: (countOngoing / (dProjects.length || 1)) * 100 + '%' }}></div>}
-                                                    {countOverdue > 0 && <div className="h-full bg-red-500 transition-all" style={{ width: (countOverdue / (dProjects.length || 1)) * 100 + '%' }}></div>}
+                                            <div className="relative w-full h-9 bg-gray-100 dark:bg-slate-900 rounded-lg overflow-visible border border-gray-200 dark:border-slate-700 group-hover:ring-2 group-hover:ring-blue-300 transition-all">
+                                                <div className="absolute inset-y-0 left-0 flex overflow-hidden rounded-lg" style={{ width: pct + '%' }}>
+                                                    {countCompleted > 0 && <div className="relative h-full bg-green-500 transition-all cursor-help" style={{ width: (countCompleted / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'selesai'})} onMouseLeave={() => setHoveredSegment(null)}>
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'selesai' && <StatusPopup projects={selesaiProj} status="Selesai" color="green" />}
+                                                    </div>}
+                                                    {countOngoing > 0 && <div className={'relative h-full ' + deptColor + ' transition-all cursor-help'} style={{ width: (countOngoing / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'berjalan'})} onMouseLeave={() => setHoveredSegment(null)}>
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'berjalan' && <StatusPopup projects={berjalanProj} status="Sedang Berjalan" color={dept === 'Pentadbiran' ? 'blue' : dept === 'Akademik' ? 'orange' : 'green'} />}
+                                                    </div>}
+                                                    {countOverdue > 0 && <div className="relative h-full bg-red-500 transition-all cursor-help" style={{ width: (countOverdue / (dProjects.length || 1)) * 100 + '%' }} onMouseEnter={() => setHoveredSegment({dept: dept, status: 'lewat'})} onMouseLeave={() => setHoveredSegment(null)}>
+                                                        {hoveredSegment && hoveredSegment.dept === dept && hoveredSegment.status === 'lewat' && <StatusPopup projects={lewatProj} status="Lewat" color="red" />}
+                                                    </div>}
                                                 </div>
-                                                {dProjects.length > 0 && (
-                                                    <div className="absolute inset-0 flex items-center px-3 text-xs font-bold text-white drop-shadow-[0_0_4px_rgba(0,0,0,0.5)]">
-                                                        {countCompleted}/{countOngoing}/{countOverdue}
-                                                    </div>
-                                                )}
                                             </div>
                                         </button>
                                     );
@@ -1672,7 +1701,7 @@
                             {openPanel === 'sektor' && (
                                 <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
-                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
+                                    <div className="relative w-full max-w-[95vw] max-h-[90vh] mx-2 sm:mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
                                         <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl">
                                             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                                 <i data-lucide="building-2" className="w-5 h-5 text-blue-600"></i> Projek Mengikut Sektor
