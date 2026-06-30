@@ -1,0 +1,98 @@
+<h2>Refined: Dashboard Grid (Default View)</h2>
+<p class="subtitle">Layout when no tab is selected — card grid as the default landing page</p>
+
+<div class="section">
+  <h3>Layout Structure</h3>
+  <div class="mockup" style="margin-top: 8px;">
+    <div class="mockup-body" style="padding: 12px; font-size: 12px; line-height: 1.5;">
+      <!-- HEADER -->
+      <div class="mock-nav" style="margin-bottom: 10px;">Logo | PELAN TAKTIKAL PPS | Role | 🌙 | Admin</div>
+      
+      <!-- TABS -->
+      <div style="display:flex;gap:6px;margin-bottom:10px;">
+        <span style="background:#3b82f6;color:#fff;padding:3px 12px;border-radius:14px;font-size:11px;font-weight:600;">Sukuan</span>
+        <span style="background:#f1f5f9;padding:3px 12px;border-radius:14px;font-size:11px;color:#64748b;">Matriks</span>
+        <span style="background:#f1f5f9;padding:3px 12px;border-radius:14px;font-size:11px;color:#64748b;">Sektor</span>
+        <span style="background:#f1f5f9;padding:3px 12px;border-radius:14px;font-size:11px;color:#64748b;">Lengkap</span>
+      </div>
+      
+      <!-- STAT ROW -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;">
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">Jumlah Projek</div>
+          <div style="font-size:22px;font-weight:700;color:#1e293b;">42</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">Sedang Berjalan</div>
+          <div style="font-size:22px;font-weight:700;color:#2563eb;">28</div>
+        </div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+          <div style="font-size:10px;color:#94a3b8;margin-bottom:2px;">Telah Siap</div>
+          <div style="font-size:22px;font-weight:700;color:#059669;">14</div>
+        </div>
+      </div>
+      
+      <!-- CARD GRID (2 columns) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <!-- Ringkasan Aktiviti card -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:#1e293b;margin-bottom:6px;">📊 Ringkasan Aktiviti</div>
+          <div style="height:50px;display:flex;gap:6px;align-items:flex-end;padding:0 4px;">
+            <div style="flex:1;background:linear-gradient(180deg,#2563eb 0%,#60a5fa 100%);height:35px;border-radius:4px 4px 0 0;text-align:center;padding-top:2px;color:#fff;font-size:9px;">12</div>
+            <div style="flex:1;background:linear-gradient(180deg,#2563eb 0%,#60a5fa 100%);height:48px;border-radius:4px 4px 0 0;text-align:center;padding-top:2px;color:#fff;font-size:9px;">18</div>
+            <div style="flex:1;background:linear-gradient(180deg,#2563eb 0%,#60a5fa 100%);height:22px;border-radius:4px 4px 0 0;text-align:center;padding-top:2px;color:#fff;font-size:9px;">8</div>
+          </div>
+          <div style="display:flex;font-size:9px;color:#64748b;margin-top:4px;">
+            <div style="flex:1;text-align:center;">Pentadbiran</div>
+            <div style="flex:1;text-align:center;">Akademik</div>
+            <div style="flex:1;text-align:center;">Siswazah</div>
+          </div>
+        </div>
+        
+        <!-- Carta Sukuan card -->
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px;">
+          <div style="font-size:11px;font-weight:600;color:#1e293b;margin-bottom:6px;">📅 Carta Sukuan Tahun</div>
+          <div style="display:flex;gap:6px;height:50px;align-items:flex-end;padding:0 4px;">
+            <div style="flex:1;text-align:center;"><div style="background:#f97316;height:28px;border-radius:3px 3px 0 0;margin-bottom:2px;"></div><div style="font-size:8px;color:#64748b;">Q1</div></div>
+            <div style="flex:1;text-align:center;"><div style="background:#f97316;height:38px;border-radius:3px 3px 0 0;margin-bottom:2px;"></div><div style="font-size:8px;color:#64748b;">Q2</div></div>
+            <div style="flex:1;text-align:center;"><div style="background:#f97316;height:22px;border-radius:3px 3px 0 0;margin-bottom:2px;"></div><div style="font-size:8px;color:#64748b;">Q3</div></div>
+            <div style="flex:1;text-align:center;"><div style="background:#f97316;height:45px;border-radius:3px 3px 0 0;margin-bottom:2px;"></div><div style="font-size:8px;color:#64748b;">Q4</div></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- LABEL -->
+      <div style="margin-top:8px;background:#f1f5f9;border-radius:8px;padding:8px;text-align:center;font-size:10px;color:#64748b;">
+        ✨ Ini default view. Klik tab (Matriks/Sektor/Lengkap) untuk gantikan grid dengan paparan penuh.
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Desired cards in the default grid?</h3>
+  <p class="subtitle">I proposed: Stats bar (3 cards) + Ringkasan Aktiviti + Carta Sukuan. Want more/less?</p>
+</div>
+
+<div class="options" data-multiselect>
+  <div class="option" data-choice="stats-row" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Stats Row (3 cards)</h3><p>Jumlah Projek, Sedang Berjalan, Telah Siap</p></div>
+  </div>
+  <div class="option" data-choice="ringkasan" onclick="toggleSelect(this)" style="border-color:#3b82f6;background:#eff6ff;">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Ringkasan Aktiviti</h3><p>Bar chart per department — always in grid</p></div>
+  </div>
+  <div class="option" data-choice="sukuan-chart" onclick="toggleSelect(this)" style="border-color:#3b82f6;background:#eff6ff;">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Carta Sukuan (compact)</h3><p>Timeline visual without table — always in grid</p></div>
+  </div>
+  <div class="option" data-choice="admin-panel" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Admin Panel (for admins)</h3><p>Quick actions: Tambah Projek, Urus Admin, Jana Laporan</p></div>
+  </div>
+  <div class="option" data-choice="projek-terkini" onclick="toggleSelect(this)">
+    <div class="letter">✓</div>
+    <div class="content"><h3>Projek Terkini</h3><p>List of most recently updated projects</p></div>
+  </div>
+</div>

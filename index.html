@@ -80,6 +80,10 @@
         .popup-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
+        @keyframes slideIn {
+            from { transform: translateX(100%); }
+            to { transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
@@ -168,8 +172,9 @@
             // =================================================================
             // TAB & PENGURUSAN PAPARAN
             // =================================================================
-            const [activeTab, setActiveTab] = useState(null);
+            const [openPanel, setOpenPanel] = useState(null);
             const [selectedDept, setSelectedDept] = useState(null);
+            const [panelSelectedDept, setPanelSelectedDept] = useState(null);
 
             const tabs = [
                 { id: 'sukuan', label: 'Sukuan Tahun', icon: 'calendar-days' },
@@ -178,23 +183,7 @@
                 { id: 'lengkap', label: 'Projek Lengkap', icon: 'check-circle' },
             ];
 
-            useEffect(() => {
-                const hash = window.location.hash.replace('#', '');
-                if (hash) {
-                    const [tab, dept] = hash.split('/');
-                    if (['sukuan','matriks','sektor','lengkap'].includes(tab)) {
-                        setActiveTab(tab);
-                        if (dept) setSelectedDept(dept);
-                    }
-                }
-            }, []);
-
-            useEffect(() => {
-                const hash = activeTab ? (selectedDept ? `${activeTab}/${selectedDept}` : activeTab) : '';
-                if (!hash && window.location.hash) { window.history.replaceState(null, '', window.location.pathname); } else if (window.location.hash !== `#${hash}`) {
-                    window.history.replaceState(null, '', `#${hash}`);
-                }
-            }, [activeTab, selectedDept]);
+            // (hash sync removed - tabs now open panels)
 
             const handleDeptBarClick = (deptName) => {
                 setSelectedDept(deptName);
@@ -1139,8 +1128,124 @@
 
             return (
                 <>
+{/* RINGKASAN AKTIVITI - PLACEHOLDER REMOVED FROM TOP */}
+
+                    {/* CUSTOM TOAST NOTIFICATION */}
+                    {toastMessage && (
+                        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1100] bg-slate-800 text-white text-sm font-semibold px-6 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 fade-in">
+                            <i data-lucide="info" className="w-5 h-5 text-blue-400"></i>
+                            <span>{toastMessage}</span>
+                        </div>
+                    )}
+
+                    {/* ========================================================= */}
+                    {/* KANDUNGAN DASHBOARD UTAMA (KABUR JIKA TIADA AKSES) */}
+                    {/* ========================================================= */}
+                    <div className={`relative min-h-screen bg-gray-50 dark:bg-black text-gray-900 dark:text-slate-100 dark:text-slate-100 pb-16 font-sans fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] ${!isAuthenticated ? 'blur-[8px] opacity-40 pointer-events-none select-none h-screen overflow-hidden' : ''}`}>
+                        <div className="absolute inset-0 bg-black/70 pointer-events-none z-0"></div>
+                        <div className="relative z-10">
+                        
+                        <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm sticky top-0 z-50 pointer-events-auto">
+                            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-x-auto whitespace-nowrap hide-scrollbar">
+                                
+                                <div className="flex items-center gap-4 flex-shrink-0">
+                                    <img src="__LOGO_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? 'hidden' : ''}`} />
+                                    <img src="__LOGO_DARK_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? '' : 'hidden'}`} />
+                                    <div className="hidden md:flex flex-col justify-center">
+                                        <h1 className="text-xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
+                                    </div>
+                                </div>
+                                
+                                <div className="hidden lg:block w-px h-10 bg-gray-200 dark:bg-slate-700 mx-4"></div>
+                                
+                                <div className="hidden lg:flex items-center gap-6 px-2 flex-shrink-0">
+                                    {tabs.map(t => (
+                                        <button key={t.id} onClick={() => setOpenPanel(t.id)}
+                                            className={'text-sm font-bold text-center leading-tight transition-colors text-gray-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400'}>
+                                            {t.label.split(' ').map((word, i) => <span key={i}>{word}{i === 0 && t.label.includes(' ') && <br/>}</span>)}
+                                        </button>
+                                    ))}
+                                </div>
+                                
+                                <div className="flex items-center gap-3 ml-auto lg:ml-4 flex-shrink-0">
+                                    
+                                    {/* BUTANG PENGURUSAN ADMIN */}
+                                    <button 
+                                        onClick={() => setShowAdminModal(true)} 
+                                        className="flex items-center gap-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 border border-purple-200 hover:bg-purple-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(168,85,247,0.25)]"
+                                    >
+                                        <i data-lucide="users" className="w-4 h-4"></i><span className="hidden sm:inline">Admin</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={() => setShowReportModal(true)} 
+                                        className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(16,185,129,0.25)]"
+                                    >
+                                        <i data-lucide="file-text" className="w-4 h-4"></i><span className="hidden md:inline">Laporan</span>
+                                    </button>
+
+                                    <button 
+                                        onClick={openAddModal} 
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm shadow-[0_0_10px_rgba(46,77,167,0.35)] transition-colors"
+                                    >
+                                        <i data-lucide="plus" className="w-4 h-4"></i><span className="hidden md:inline">Tambah Projek</span>
+                                    </button>
+                                    
+                                    <button onClick={fetchProjects} disabled={loading} className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm">
+                                        <i data-lucide="refresh-cw" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}></i>
+                                    </button>
+
+                                    <button 
+                                        onClick={toggleTheme}
+                                        title={theme === 'dark' ? 'Tukar ke Mod Cerah' : 'Tukar ke Mod Gelap'}
+                                        className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm"
+                                    >
+                                        <i data-lucide={theme === 'dark' ? 'sun' : 'moon'} className="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </header>
+
+                        {/* TAB BAR */}
+                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pointer-events-auto">
+                            <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                                {tabs.map(t => (
+                                    <button key={t.id} onClick={() => setOpenPanel(t.id)}
+                                        className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700">
+                                        <i data-lucide={t.icon} className="w-4 h-4"></i>
+                                        {t.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative pointer-events-auto">
+                            
+                            {/* ROLE BADGE */}
+                            <div className="flex justify-between items-center w-full">
+                                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-semibold select-all pointer-events-auto">
+                                     <i data-lucide="user" className="w-3.5 h-3.5"></i> {currentUserEmail}
+                                 </span>
+<span className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 px-4 py-1.5 rounded-full text-xs font-bold shadow-[0_0_10px_rgba(46,77,167,0.35)] pointer-events-auto">
+                                      <i data-lucide="shield-check" className="w-4 h-4"></i>Akses: Kakitangan PPS
+                                  </span>
+                            </div>
+
+                            {error && (
+                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex items-start gap-3">
+                                    <i data-lucide="alert-circle" className="text-red-500 mt-0.5 w-5 h-5"></i>
+                                    <div>
+                                        <h3 className="text-red-800 font-medium">Nota Makluman / Ralat</h3>
+                                        <p className="text-red-700 text-sm mt-1">{error}</p>
+                                    </div>
+                                </div>
+                            )}
+
+                            <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} compact={true} />
+                        
                     {/* RINGKASAN AKTIVITI */}
-                    {activeTab === null && (
+                    {projects.length > 0 && (
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 fade-in">
                             <div className="mb-6">
                                 <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
@@ -1199,123 +1304,8 @@
                         </div>
                     )}
 
-                    {/* CUSTOM TOAST NOTIFICATION */}
-                    {toastMessage && (
-                        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-[1100] bg-slate-800 text-white text-sm font-semibold px-6 py-3.5 rounded-xl shadow-2xl flex items-center gap-3 border border-slate-700 fade-in">
-                            <i data-lucide="info" className="w-5 h-5 text-blue-400"></i>
-                            <span>{toastMessage}</span>
-                        </div>
-                    )}
 
-                    {/* ========================================================= */}
-                    {/* KANDUNGAN DASHBOARD UTAMA (KABUR JIKA TIADA AKSES) */}
-                    {/* ========================================================= */}
-                    <div className={`relative min-h-screen bg-gray-50 dark:bg-slate-900 dark:bg-slate-950 text-gray-900 dark:text-slate-100 dark:text-slate-100 pb-16 font-sans fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] ${!isAuthenticated ? 'blur-[8px] opacity-40 pointer-events-none select-none h-screen overflow-hidden' : ''}`}>
-                        
-                        <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm sticky top-0 z-50 pointer-events-auto">
-                            <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-x-auto whitespace-nowrap hide-scrollbar">
-                                
-                                <div className="flex items-center gap-4 flex-shrink-0">
-                                    <img src="__LOGO_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? 'hidden' : ''}`} />
-                                    <img src="__LOGO_DARK_URL__" alt="Logo" className={`h-12 object-contain ${theme === 'dark' ? '' : 'hidden'}`} />
-                                    <div className="hidden md:flex flex-col justify-center">
-                                        <h1 className="text-xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
-                                        <p className="text-sm text-gray-500 dark:text-slate-400 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
-                                    </div>
-                                </div>
-                                
-                                <div className="hidden lg:block w-px h-10 bg-gray-200 dark:bg-slate-700 mx-4"></div>
-                                
-                                <div className="hidden lg:flex items-center gap-6 px-2 flex-shrink-0">
-                                    {tabs.map(t => (
-                                        <button key={t.id} onClick={() => setActiveTab(activeTab === t.id ? null : t.id)}
-                                            className={`text-sm font-bold text-center leading-tight transition-colors ${activeTab === t.id ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400'}`}>
-                                            {t.label.split(' ').map((word, i) => <span key={i}>{word}{i === 0 && t.label.includes(' ') && <br/>}</span>)}
-                                        </button>
-                                    ))}
-                                </div>
-                                
-                                <div className="flex items-center gap-3 ml-auto lg:ml-4 flex-shrink-0">
-                                    
-                                    {/* BUTANG PENGURUSAN ADMIN */}
-                                    <button 
-                                        onClick={() => setShowAdminModal(true)} 
-                                        className="flex items-center gap-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 border border-purple-200 hover:bg-purple-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(168,85,247,0.25)]"
-                                    >
-                                        <i data-lucide="users" className="w-4 h-4"></i><span className="hidden sm:inline">Admin</span>
-                                    </button>
-
-                                    <button 
-                                        onClick={() => setShowReportModal(true)} 
-                                        className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(16,185,129,0.25)]"
-                                    >
-                                        <i data-lucide="file-text" className="w-4 h-4"></i><span className="hidden md:inline">Laporan</span>
-                                    </button>
-
-                                    <button 
-                                        onClick={openAddModal} 
-                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm shadow-[0_0_10px_rgba(46,77,167,0.35)] transition-colors"
-                                    >
-                                        <i data-lucide="plus" className="w-4 h-4"></i><span className="hidden md:inline">Tambah Projek</span>
-                                    </button>
-                                    
-                                    <button onClick={fetchProjects} disabled={loading} className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm">
-                                        <i data-lucide="refresh-cw" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}></i>
-                                    </button>
-
-                                    <button 
-                                        onClick={toggleTheme}
-                                        title={theme === 'dark' ? 'Tukar ke Mod Cerah' : 'Tukar ke Mod Gelap'}
-                                        className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm"
-                                    >
-                                        <i data-lucide={theme === 'dark' ? 'sun' : 'moon'} className="w-4 h-4"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        </header>
-
-                        {/* TAB BAR */}
-                        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pointer-events-auto">
-                            <div className="flex gap-2 overflow-x-auto hide-scrollbar">
-                                {tabs.map(t => (
-                                    <button key={t.id} onClick={() => setActiveTab(activeTab === t.id ? null : t.id)}
-                                        className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
-                                            activeTab === t.id
-                                                ? 'bg-unisza-blue text-white shadow-[0_0_10px_rgba(46,77,167,0.45)]'
-                                                : 'bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700'
-                                        }`}>
-                                        <i data-lucide={t.icon} className="w-4 h-4"></i>
-                                        {t.label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 relative pointer-events-auto">
-                            
-                            {/* ROLE BADGE */}
-                            <div className="flex justify-between items-center w-full">
-                                 <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-semibold select-all pointer-events-auto">
-                                     <i data-lucide="user" className="w-3.5 h-3.5"></i> {currentUserEmail}
-                                 </span>
-<span className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 px-4 py-1.5 rounded-full text-xs font-bold shadow-[0_0_10px_rgba(46,77,167,0.35)] pointer-events-auto">
-                                      <i data-lucide="shield-check" className="w-4 h-4"></i>Akses: Kakitangan PPS
-                                  </span>
-                            </div>
-
-                            {error && (
-                                <div className="bg-red-50 border-l-4 border-red-500 p-4 rounded-md flex items-start gap-3">
-                                    <i data-lucide="alert-circle" className="text-red-500 mt-0.5 w-5 h-5"></i>
-                                    <div>
-                                        <h3 className="text-red-800 font-medium">Nota Makluman / Ralat</h3>
-                                        <p className="text-red-700 text-sm mt-1">{error}</p>
-                                    </div>
-                                </div>
-                            )}
-
-                            {(activeTab === 'sukuan' || activeTab === null) && <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} compact={activeTab !== 'sukuan'} />}
-
-                            {activeTab === 'matriks' && <div id="section-eisenhower" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
+                            {false && <div id="section-eisenhower" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
@@ -1365,7 +1355,7 @@
                                 )}
                             </div>}
 
-                            {activeTab === 'sektor' && <div id="section-department" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
+                            {false && <div id="section-department" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                     <div>
                                         <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
@@ -1452,7 +1442,7 @@
                                 </div>
                             </div>}
 
-                            {activeTab === 'lengkap' && <div id="section-completed" className="mt-8 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden scroll-mt-20">
+                            {false && <div id="section-completed" className="mt-8 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden scroll-mt-20">
                                 <div className="bg-purple-500 px-6 py-4 text-white flex items-center gap-3">
                                     <i data-lucide="check-circle" className="text-purple-100 w-6 h-6"></i>
                                     <h2 className="text-lg font-bold tracking-wide">PROJEK LENGKAP</h2>
@@ -1513,7 +1503,8 @@
                                     </table>
                                 </div>
                             </div>}
-                        </main>
+                                                </div>
+                    </main>
                     </div>
 
                     {/* ========================================================= */}
@@ -1804,7 +1795,229 @@
                             </div>
                         </div>
                     )}
-                </>
+                
+
+                            {/* ========================================================= */}
+                            {/* SIDE DRAWER: SUKUAN TAHUN (chart + table) */}
+                            {/* ========================================================= */}
+                            {openPanel === 'sukuan' && (
+                                <div className="fixed inset-0 z-[200]">
+                                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
+                                    <div className="absolute top-0 right-0 h-full w-full max-w-4xl bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto animate-[slideIn_0.3s_ease-out] border-l border-gray-200 dark:border-slate-700">
+                                        <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                                            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                                <i data-lucide="calendar-days" className="w-5 h-5 text-blue-600"></i> Sukuan Tahun
+                                            </h2>
+                                            <button onClick={() => setOpenPanel(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+                                                <i data-lucide="x" className="w-5 h-5"></i>
+                                            </button>
+                                        </div>
+                                        <div className="p-6">
+                                            <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} compact={false} />
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ========================================================= */}
+                            {/* SIDE DRAWER: MATRIKS KEPENTINGAN */}
+                            {/* ========================================================= */}
+                            {openPanel === 'matriks' && (
+                                <div className="fixed inset-0 z-[200]">
+                                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
+                                    <div className="absolute top-0 right-0 h-full w-full max-w-4xl bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto animate-[slideIn_0.3s_ease-out] border-l border-gray-200 dark:border-slate-700">
+                                        <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                                            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                                <i data-lucide="layout-grid" className="w-5 h-5 text-blue-600"></i> Carta Matriks Kepentingan
+                                            </h2>
+                                            <button onClick={() => setOpenPanel(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+                                                <i data-lucide="x" className="w-5 h-5"></i>
+                                            </button>
+                                        </div>
+                                        <div className="p-6">
+                                            <p className="text-sm text-gray-500 dark:text-slate-400 mb-4">
+                                                Tarik (drag) dan lepaskan (drop) projek untuk menyusun tahap keutamaannya.
+                                            </p>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-100 dark:border-slate-600">
+                                                <QuadrantBox title="Penting & Segera (Buat Terus)" category="Penting & Segera" icon="flame" bgColor="bg-red-50" borderColor="border-red-200" titleColor="text-red-700" glow="shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
+                                                <QuadrantBox title="Penting, Tak Segera (Rancang)" category="Penting & Tak Segera" icon="calendar-clock" bgColor="bg-blue-50 dark:bg-blue-900/20" borderColor="border-blue-200" titleColor="text-blue-700" glow="shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
+                                                <QuadrantBox title="Kurang Penting, Segera (Serah)" category="Kurang Penting & Segera" icon="users-round" bgColor="bg-amber-50" borderColor="border-amber-200" titleColor="text-amber-700" glow="shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+                                                <QuadrantBox title="Kurang Penting, Tak Segera (Simpan)" category="Kurang Penting & Tak Segera" icon="archive" bgColor="bg-gray-100 dark:bg-slate-800" borderColor="border-gray-300 dark:border-slate-600" titleColor="text-gray-600 dark:text-slate-300" glow="shadow-[0_0_8px_rgba(148,163,184,0.3)]" />
+                                            </div>
+                                            {openPanel === 'matriks' && activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').length > 0 && (
+                                                <div 
+                                                    className="mt-4 p-4 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 transition-all" 
+                                                    onDragOver={(e) => handleDragOver(e)} 
+                                                    onDrop={(e) => handleDrop(e, 'Belum Ditetapkan')}
+                                                >
+                                                    <h3 className="text-sm font-bold text-gray-600 dark:text-slate-300 mb-3 flex items-center gap-2"><i data-lucide="help-circle" className="w-4 h-4"></i> Projek Belum Ditetapkan Kepentingan</h3>
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                                                        {activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').map(p => (
+                                                            <ProjectBar key={p.Projek} project={p} />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ========================================================= */}
+                            {/* SIDE DRAWER: MENGIKUT SEKTOR */}
+                            {/* ========================================================= */}
+                            {openPanel === 'sektor' && (
+                                <div className="fixed inset-0 z-[200]">
+                                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
+                                    <div className="absolute top-0 right-0 h-full w-full max-w-4xl bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto animate-[slideIn_0.3s_ease-out] border-l border-gray-200 dark:border-slate-700">
+                                        <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700">
+                                            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
+                                                <i data-lucide="building-2" className="w-5 h-5 text-blue-600"></i> Projek Mengikut Sektor
+                                            </h2>
+                                            <div className="flex items-center gap-3">
+                                                {panelSelectedDept && (
+                                                    <span className="px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 text-xs font-bold flex items-center gap-1.5">
+                                                        <i data-lucide="filter" className="w-3 h-3"></i>
+                                                        {panelSelectedDept}
+                                                        <button onClick={() => setPanelSelectedDept(null)} className="ml-1 hover:text-red-500 transition-colors">&times;</button>
+                                                    </span>
+                                                )}
+                                                <button onClick={() => setOpenPanel(null)} className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-md transition-colors">
+                                                    <i data-lucide="x" className="w-5 h-5"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="p-6">
+                                            {/* Quick filter buttons */}
+                                            <div className="flex gap-2 mb-6 flex-wrap">
+                                                {['Semua','Pentadbiran','Akademik','Hal Ehwal Siswazah'].map(dept => (
+                                                    <button key={dept} 
+                                                        onClick={() => setPanelSelectedDept(dept === 'Semua' ? null : dept)}
+                                                        className={`px-4 py-1.5 rounded-full text-xs font-bold transition-colors ${(dept === 'Semua' && !panelSelectedDept) || panelSelectedDept === dept ? 'bg-unisza-blue text-white' : 'bg-gray-100 dark:bg-slate-700 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-600'}`}>
+                                                        {dept}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                {Object.entries(departmentConfig).filter(([deptName]) => !panelSelectedDept || deptName === panelSelectedDept).map(([deptName, config]) => {
+                                                    let deptProjects = activeProjects.filter(p => p.Jabatan === deptName);
+                                                    deptProjects.sort((a, b) => {
+                                                        if (activeSortConfig === 'taktikal') {
+                                                            const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                                                            const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                                                            if (isOverdueA && !isOverdueB) return -1;
+                                                            if (!isOverdueA && isOverdueB) return 1;
+                                                            if (isOverdueA && isOverdueB) {
+                                                                const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                                                                const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                                                                return daySpentB - daySpentA;
+                                                            }
+                                                            return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                        } else if (activeSortConfig === 'prog_desc') {
+                                                            return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                        } else if (activeSortConfig === 'prog_asc') {
+                                                            return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                                                        } else if (activeSortConfig === 'date_asc') {
+                                                            const dateA = parseDateForSort(a.TarikhAsal);
+                                                            const dateB = parseDateForSort(b.TarikhAsal);
+                                                            if (dateA === 0 && dateB === 0) return 0;
+                                                            if (dateA === 0) return 1;
+                                                            if (dateB === 0) return -1;
+                                                            return dateA - dateB;
+                                                        }
+                                                        return 0;
+                                                    });
+                                                    return (
+                                                        <div key={deptName} className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                                                            <div className={`${config.headerBg} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
+                                                                <div className="flex items-center gap-2">
+                                                                    <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
+                                                                    <h3 className="font-bold">{deptName}</h3>
+                                                                </div>
+                                                                <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{deptProjects.length}</span>
+                                                            </div>
+                                                            <div className="p-4 flex-1 bg-gray-50/50">
+                                                                {deptProjects.map((project, index) => <ProjectBar key={index} project={project} />)}
+                                                                {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 dark:text-slate-500 text-sm border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg">Tiada projek direkodkan.</div>}
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* ========================================================= */}
+                            {/* SIDE DRAWER: PROJEK LENGKAP */}
+                            {/* ========================================================= */}
+                            {openPanel === 'lengkap' && (
+                                <div className="fixed inset-0 z-[200]">
+                                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
+                                    <div className="absolute top-0 right-0 h-full w-full max-w-4xl bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto animate-[slideIn_0.3s_ease-out] border-l border-gray-200 dark:border-slate-700">
+                                        <div className="sticky top-0 bg-purple-500 px-6 py-4 text-white flex items-center justify-between">
+                                            <h2 className="text-lg font-bold tracking-wide flex items-center gap-2"><i data-lucide="check-circle" className="w-5 h-5"></i> PROJEK LENGKAP</h2>
+                                            <button onClick={() => setOpenPanel(null)} className="text-purple-100 hover:text-white p-2 hover:bg-purple-600 rounded-md transition-colors">
+                                                <i data-lucide="x" className="w-5 h-5"></i>
+                                            </button>
+                                        </div>
+                                        <div className="p-6 overflow-x-auto">
+                                            <table className="w-full text-sm text-left text-gray-600 dark:text-slate-300">
+                                                <thead className="text-xs text-gray-700 dark:text-slate-200 uppercase bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
+                                                    <tr>
+                                                        <th className="px-6 py-4 font-semibold">Bil</th>
+                                                        <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('Projek')}>
+                                                            <div className="flex items-center w-max">Projek {renderSortIcon('Projek')}</div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('TarikhMula')}>
+                                                            <div className="flex items-center w-max">Tarikh Mula {renderSortIcon('TarikhMula')}</div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('TarikhSebenar')}>
+                                                            <div className="flex items-center w-max">Tarikh Siap {renderSortIcon('TarikhSebenar')}</div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('Jabatan')}>
+                                                            <div className="flex items-center w-max">Bahagian {renderSortIcon('Jabatan')}</div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold text-center" data-html2canvas-ignore>Tindakan</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {sortedCompletedProjects.map((project, index) => (
+                                                        <tr key={index} className="bg-white dark:bg-slate-800 border-b hover:bg-purple-50/50 transition-colors">
+                                                            <td className="px-6 py-3 font-medium text-gray-900 dark:text-slate-100">{index + 1}</td>
+                                                            <td className="px-6 py-3 font-semibold text-gray-800 dark:text-slate-100">
+                                                                <div className="flex items-center gap-1.5 w-max">
+                                                                    <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 ${project.Jabatan === 'Pentadbiran' ? 'text-blue-600' : project.Jabatan === 'Akademik' ? 'text-orange-600' : 'text-green-600'}`} title={project.Jabatan}></i>
+                                                                    <span>{project.Projek}</span>
+                                                                    {project.Catatan && (
+                                                                        <div className="relative group/tooltip flex items-center">
+                                                                            <svg className="w-4 h-4 text-purple-500 opacity-80 flex-shrink-0 cursor-help" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M9 9h6"/><path d="M9 13h6"/>
+                                                                            </svg>
+                                                                            <div className="absolute left-full ml-2 top-1/2 -translate-y-1/2 w-64 md:w-72 bg-gray-700 text-white rounded-md p-3 opacity-0 invisible group-hover/tooltip:opacity-100 group-hover/tooltip:visible transition-all duration-200 z-[999] shadow-xl font-normal text-xs whitespace-normal break-words leading-relaxed pointer-events-none">
+                                                                                {project.Catatan}
+                                                                            </div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-6 py-3">{project.TarikhMula || '-'}</td>
+                                                            <td className="px-6 py-3 text-purple-700 font-medium">{project.TarikhSebenar || project.TarikhAkhir || '-'}</td>
+                                                            <td className="px-6 py-3">{project.Jabatan}</td>
+                                                            <td className="px-6 py-3 text-center" data-html2canvas-ignore>
+                                                                <button onClick={() => handleEditClick(project)} className="text-blue-600 hover:text-blue-800 font-medium">Lihat Butiran</button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+</>
             );
         }
 
