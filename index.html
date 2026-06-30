@@ -244,6 +244,28 @@
                 });
             });
 
+            // Kekunci Esc untuk menutup panel modal dan kembali ke paparan utama
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (e.key !== 'Escape') return;
+                    if (openPanel) {
+                        setOpenPanel(null);
+                    } else if (showModal) {
+                        if (showConfirmDelete) {
+                            setShowConfirmDelete(false);
+                        } else {
+                            setShowModal(false);
+                        }
+                    } else if (showReportModal) {
+                        setShowReportModal(false);
+                    } else if (showAdminModal) {
+                        setShowAdminModal(false);
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [openPanel, showModal, showConfirmDelete, showReportModal, showAdminModal]);
+
             // Tarik data sebaik laman web dibuka
             useEffect(() => {
                 fetchProjects();
