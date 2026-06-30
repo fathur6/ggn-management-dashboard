@@ -12,6 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -102,15 +103,15 @@
         // ============================================================================
         // PAUTAN GOOGLE SHEETS & APPS SCRIPT ANDA (VERSI TERKINI)
         // ============================================================================
-        const GOOGLE_SHEETS_CSV_URL = "https://docs.google.com/spreadsheets/d/1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU/gviz/tq?tqx=out:csv&gid=0"; 
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV/exec"; 
+        const GOOGLE_SHEETS_CSV_URL = "__GOOGLE_SHEETS_CSV_URL__"; 
+        const GOOGLE_SCRIPT_URL = "__GOOGLE_SCRIPT_URL__"; 
 
         function App() {
             // =================================================================
             // PENGURUSAN OAUTH & AKSES ADMIN (VERSI SELAMAT)
             // =================================================================
-            let serverUserEmail = "pps@unisza.edu.my"; 
-            let initialAdmins = ["pps@unisza.edu.my", "fathurrahman@unisza.edu.my"];
+            let serverUserEmail = "admin@example.com"; 
+            let initialAdmins = ["admin@example.com", "user1@example.com"];
             
             try {
                 const gasDataContent = document.getElementById('gas-data').textContent;
@@ -144,6 +145,25 @@
                     setUserRole('viewer');
                 }
             }, [adminList, currentUserEmail]);
+
+            // =================================================================
+            // PENGURUSAN TEMA (GELAP / CERAH)
+            // =================================================================
+            const [theme, setTheme] = useState('dark');
+
+            useEffect(() => {
+                const saved = localStorage.getItem('pps-theme');
+                const initial = saved || 'dark';
+                setTheme(initial);
+                document.documentElement.classList.toggle('dark', initial === 'dark');
+            }, []);
+
+            const toggleTheme = () => {
+                const next = theme === 'dark' ? 'light' : 'dark';
+                setTheme(next);
+                localStorage.setItem('pps-theme', next);
+                document.documentElement.classList.toggle('dark', next === 'dark');
+            };
 
             // =================================================================
             // STATE PROJEK & DASHBOARD
@@ -555,7 +575,7 @@
                     if (p <= 80) return { bg: 'bg-green-200', fill: 'bg-green-600' };
                     return { bg: 'bg-green-200', fill: 'bg-green-800' };
                 }
-                return { bg: 'bg-gray-100', fill: 'bg-gray-500' };
+                return { bg: 'bg-gray-100 dark:bg-slate-800', fill: 'bg-gray-500' };
             };
 
             const getDeptIcon = (dept) => {
@@ -614,7 +634,7 @@
                 const isAscending = sortConfig.direction === 'ascending';
                 const baseClass = "inline ml-1.5 w-3.5 h-3.5 flex-shrink-0 transition-transform";
                 if (!isActive) {
-                    return <svg className={`${baseClass} text-gray-400 opacity-60`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>;
+                    return <svg className={`${baseClass} text-gray-400 dark:text-slate-500 opacity-60`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>;
                 }
                 if (isAscending) {
                     return <svg className={`${baseClass} text-purple-600 font-bold`} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12 7-7 7 7"/><path d="M12 19V5"/></svg>;
@@ -669,10 +689,10 @@
             // =================================================================
             const ProjectTimeline = ({ activeProjects, completedProjects }) => {
                 const quarters = [
-                    { id: 'q1', name: "Q1", barColor: "bg-[#ffc107]", borderColor: "border-[#ffc107]", textColor: "text-[#ffc107]", months: ["Jan", "Feb", "Mac"] },
-                    { id: 'q2', name: "Q2", barColor: "bg-[#29b6f6]", borderColor: "border-[#29b6f6]", textColor: "text-[#29b6f6]", months: ["Apr", "Mei", "Jun"] },
-                    { id: 'q3', name: "Q3", barColor: "bg-[#ff5722]", borderColor: "border-[#ff5722]", textColor: "text-[#ff5722]", months: ["Jul", "Ogo", "Sep"] },
-                    { id: 'q4', name: "Q4", barColor: "bg-[#ff4081]", borderColor: "border-[#ff4081]", textColor: "text-[#ff4081]", months: ["Okt", "Nov", "Dis"] }
+                    { id: 'q1', name: "Q1", barColor: "bg-[#ffc107]", borderColor: "border-[#ffc107]", textColor: "text-[#ffc107]", glow: "shadow-[0_0_8px_rgba(255,193,7,0.45)]", months: ["Jan", "Feb", "Mac"] },
+                    { id: 'q2', name: "Q2", barColor: "bg-[#29b6f6]", borderColor: "border-[#29b6f6]", textColor: "text-[#29b6f6]", glow: "shadow-[0_0_8px_rgba(41,182,246,0.45)]", months: ["Apr", "Mei", "Jun"] },
+                    { id: 'q3', name: "Q3", barColor: "bg-[#ff5722]", borderColor: "border-[#ff5722]", textColor: "text-[#ff5722]", glow: "shadow-[0_0_8px_rgba(255,87,34,0.45)]", months: ["Jul", "Ogo", "Sep"] },
+                    { id: 'q4', name: "Q4", barColor: "bg-[#ff4081]", borderColor: "border-[#ff4081]", textColor: "text-[#ff4081]", glow: "shadow-[0_0_8px_rgba(255,64,129,0.45)]", months: ["Okt", "Nov", "Dis"] }
                 ];
 
                 const monthMap = { 'jan': 0, 'feb': 1, 'mac': 2, 'apr': 3, 'mei': 4, 'jun': 5, 'jul': 6, 'ogo': 7, 'sep': 8, 'okt': 9, 'nov': 10, 'dis': 11 };
@@ -737,12 +757,12 @@
                 });
 
                 return (
-                    <div id="section-timeline" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 overflow-hidden scroll-mt-20">
+                    <div id="section-timeline" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 overflow-hidden scroll-mt-20">
                         <div className="mb-6">
-                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                            <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                 <i data-lucide="calendar-days" className="w-5 h-5 text-blue-600"></i> Carta Sukuan Tahun
                             </h2>
-                            <p className="text-sm text-gray-500 mt-1">
+                            <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
                                 Garis masa paparan projek mengikut bulan. Nombor berwarna mewakili sasaran, nombor kelabu mewakili projek siap.<br/>
                                 Klik pada nombor untuk mengekalkan popup terbuka supaya anda boleh scroll senarai.
                             </p>
@@ -750,14 +770,14 @@
                         
                         <div className="w-full pb-36 pt-16">
                             <div className="w-full px-2 sm:px-4">
-                                <div className="relative flex w-full bg-gray-100 p-2 rounded-full shadow-inner">
+                                <div className="relative flex w-full bg-gray-100 dark:bg-slate-800 p-2 rounded-full shadow-inner">
                                     {timelineData.map((q, qIndex) => (
                                         <div 
                                             key={q.id} 
-                                            className={`flex-1 flex justify-around items-center h-16 ${q.barColor} ${qIndex === 0 ? 'rounded-l-full' : ''} ${qIndex === timelineData.length - 1 ? 'rounded-r-full' : ''} border-r-2 border-white/30 last:border-r-0 relative`}
+                                            className={`flex-1 flex justify-around items-center h-16 ${q.barColor} ${qIndex === 0 ? 'rounded-l-full' : ''} ${qIndex === timelineData.length - 1 ? 'rounded-r-full' : ''} border-r-2 border-white/30 last:border-r-0 relative ${q.glow}`}
                                         >
                                             <div className="absolute -top-16 left-1/2 -translate-x-1/2 flex flex-col items-center z-10">
-                                                <div className={`border-[3px] ${q.borderColor} bg-white px-5 py-1 rounded-xl font-bold text-gray-600 shadow-sm min-w-[70px] text-center text-sm`}>
+                                                <div className={`border-[3px] ${q.borderColor} ${q.glow} bg-white dark:bg-slate-800 px-5 py-1 rounded-xl font-bold text-gray-600 dark:text-slate-300 shadow-sm min-w-[70px] text-center text-sm`}>
                                                     {q.name}
                                                 </div>
                                                 <svg className={`w-4 h-5 ${q.textColor} mt-1`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -774,14 +794,14 @@
 
                                                 return (
                                                     <div key={mIndex} className="relative flex flex-col items-center">
-                                                        <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center font-bold text-xs text-gray-500 shadow-sm z-20">
+                                                        <div className="w-10 h-10 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center font-bold text-xs text-gray-500 dark:text-slate-400 shadow-sm z-20">
                                                             {m.name}
                                                         </div>
 
                                                         {(m.active.length > 0 || m.completed.length > 0) && (
                                                             <div className="absolute top-10 flex flex-col items-center z-30">
                                                                 <div className={`w-0.5 bg-gray-300 relative transition-colors ${m.active.length > 0 ? 'h-10' : 'h-[5.5rem]'}`}>
-                                                                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-2 h-4 bg-gray-50 border border-gray-300 rounded-full"></div>
+                                                                    <div className="absolute top-1/2 -translate-y-1/2 left-1/2 -translate-x-1/2 w-2 h-4 bg-gray-50 dark:bg-slate-900 border border-gray-300 dark:border-slate-600 rounded-full"></div>
                                                                 </div>
                                                                 
                                                                 {m.active.length > 0 && (
@@ -791,7 +811,7 @@
                                                                         onMouseLeave={handleNodeLeave}
                                                                         onClick={() => handleNodeClick(activeNodeId)}
                                                                     >
-                                                                        <div className={`w-10 h-10 ${q.barColor} rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isActiveVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
+                                                                        <div className={`w-10 h-10 ${q.barColor} ${q.glow} rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isActiveVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
                                                                             {m.active.length < 10 ? `0${m.active.length}` : m.active.length}
                                                                         </div>
 
@@ -827,7 +847,7 @@
                                                                         onMouseLeave={handleNodeLeave}
                                                                         onClick={() => handleNodeClick(completedNodeId)}
                                                                     >
-                                                                        <div className={`w-10 h-10 bg-gray-400 rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isCompletedVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
+                                                                        <div className={`w-10 h-10 bg-gray-400 shadow-[0_0_8px_rgba(148,163,184,0.35)] rounded-full border-[3px] border-white shadow-md flex items-center justify-center text-white font-bold text-xs transition-transform duration-300 ${isCompletedVisible ? 'scale-110 shadow-lg' : 'hover:scale-110'}`}>
                                                                             {m.completed.length < 10 ? `0${m.completed.length}` : m.completed.length}
                                                                         </div>
 
@@ -863,14 +883,14 @@
                         </div>
 
                         {/* JADUAL RINGKASAN SUKU TAHUN (Q1 - Q4) UNTUK LAPORAN PDF */}
-                        <div className="mt-8 border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm">
-                            <table className="w-full text-sm text-left text-gray-600 table-fixed">
-                                <thead className="bg-gray-50 border-b border-gray-200">
+                        <div className="mt-8 border border-gray-200 dark:border-slate-700 rounded-xl overflow-hidden bg-white dark:bg-slate-800 shadow-sm">
+                            <table className="w-full text-sm text-left text-gray-600 dark:text-slate-300 table-fixed">
+                                <thead className="bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
                                     <tr>
-                                        <th className="w-32 px-4 py-3 font-bold text-gray-700 border-r border-gray-200 text-center">Status</th>
+                                        <th className="w-32 px-4 py-3 font-bold text-gray-700 dark:text-slate-200 border-r border-gray-200 dark:border-slate-700 text-center">Status</th>
                                         {timelineData.map(q => (
-                                            <th key={q.id} className="px-4 py-3 text-center border-r border-gray-200 last:border-r-0">
-                                                <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${q.barColor}`}>{q.name}</span>
+                                            <th key={q.id} className="px-4 py-3 text-center border-r border-gray-200 dark:border-slate-700 last:border-r-0">
+                                                <span className={`px-3 py-1 rounded-full text-white text-xs font-bold ${q.barColor} ${q.glow}`}>{q.name}</span>
                                             </th>
                                         ))}
                                     </tr>
@@ -878,27 +898,27 @@
                                 <tbody className="divide-y divide-gray-200">
                                     {/* Baris Aktif */}
                                     <tr className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-4 py-4 font-semibold text-blue-700 border-r border-gray-200 bg-blue-50/30 align-top text-center">
-                                            <div className="flex flex-col items-center gap-1.5">
-                                                <i data-lucide="target" className="w-5 h-5"></i>
-                                                <span className="text-xs uppercase tracking-wide">Sasaran<br/>Aktif</span>
-                                            </div>
-                                        </td>
+<td className="px-4 py-4 font-semibold text-blue-700 border-r border-gray-200 dark:border-slate-700 bg-blue-50/30 dark:bg-blue-900/20 shadow-[0_0_10px_rgba(46,77,167,0.2)] align-top text-center">
+                                             <div className="flex flex-col items-center gap-1.5">
+                                                 <i data-lucide="target" className="w-5 h-5"></i>
+                                                 <span className="text-xs uppercase tracking-wide">Sasaran<br/>Aktif</span>
+                                             </div>
+                                         </td>
                                         {timelineData.map(q => {
                                             const qActive = q.monthsData.reduce((acc, m) => acc.concat(m.active), []);
                                             return (
-                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 last:border-r-0 align-top">
+                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 dark:border-slate-700 last:border-r-0 align-top">
                                                     {qActive.length > 0 ? (
                                                         <ul className="space-y-1.5">
                                                             {qActive.map((p, idx) => (
                                                                 <li key={idx} className="flex items-start gap-2">
                                                                     <span className={`w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 ${q.barColor}`}></span>
-                                                                    <span className="text-xs font-medium text-gray-700 leading-snug">{p.Projek}</span>
+                                                                    <span className="text-xs font-medium text-gray-700 dark:text-slate-200 leading-snug">{p.Projek}</span>
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     ) : (
-                                                        <span className="text-gray-400 italic text-xs block text-center mt-2">- Tiada -</span>
+                                                        <span className="text-gray-400 dark:text-slate-500 italic text-xs block text-center mt-2">- Tiada -</span>
                                                     )}
                                                 </td>
                                             );
@@ -907,7 +927,7 @@
                                     
                                     {/* Baris Siap */}
                                     <tr className="hover:bg-gray-50/50 transition-colors">
-                                        <td className="px-4 py-4 font-semibold text-gray-600 border-r border-gray-200 bg-gray-100/50 align-top text-center">
+                                        <td className="px-4 py-4 font-semibold text-gray-600 dark:text-slate-300 border-r border-gray-200 dark:border-slate-700 bg-gray-100 dark:bg-slate-800/50 align-top text-center">
                                             <div className="flex flex-col items-center gap-1.5">
                                                 <i data-lucide="check-circle" className="w-5 h-5"></i>
                                                 <span className="text-xs uppercase tracking-wide">Telah<br/>Siap</span>
@@ -916,18 +936,18 @@
                                         {timelineData.map(q => {
                                             const qCompleted = q.monthsData.reduce((acc, m) => acc.concat(m.completed), []);
                                             return (
-                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 last:border-r-0 align-top">
+                                                <td key={q.id} className="px-4 py-3 border-r border-gray-200 dark:border-slate-700 last:border-r-0 align-top">
                                                     {qCompleted.length > 0 ? (
                                                         <ul className="space-y-1.5">
                                                             {qCompleted.map((p, idx) => (
                                                                 <li key={idx} className="flex items-start gap-2">
                                                                     <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0 bg-gray-400"></span>
-                                                                    <span className="text-xs font-medium text-gray-700 leading-snug">{p.Projek}</span>
+                                                                    <span className="text-xs font-medium text-gray-700 dark:text-slate-200 leading-snug">{p.Projek}</span>
                                                                 </li>
                                                             ))}
                                                         </ul>
                                                     ) : (
-                                                        <span className="text-gray-400 italic text-xs block text-center mt-2">- Tiada -</span>
+                                                        <span className="text-gray-400 dark:text-slate-500 italic text-xs block text-center mt-2">- Tiada -</span>
                                                     )}
                                                 </td>
                                             );
@@ -961,14 +981,14 @@
                             ></div>
                         </div>
                         
-                        <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 z-10 text-gray-800">
+                        <div className="absolute top-0 left-0 w-full h-full flex justify-between items-center px-3 z-10 text-gray-800 dark:text-slate-100">
                             <div className="flex items-center gap-3 w-[65%] bg-white/70 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20">
-                                {isCompleted ? <i data-lucide="check-circle-2" className="text-green-700 w-4 h-4 min-w-max"></i> : (isOverdue ? <i data-lucide="alert-circle" className="text-red-600 w-4 h-4 min-w-max"></i> : <i data-lucide="grip-vertical" className="text-gray-400 w-4 h-4 min-w-max"></i>)}
+                                {isCompleted ? <i data-lucide="check-circle-2" className="text-green-700 w-4 h-4 min-w-max"></i> : (isOverdue ? <i data-lucide="alert-circle" className="text-red-600 w-4 h-4 min-w-max"></i> : <i data-lucide="grip-vertical" className="text-gray-400 dark:text-slate-500 w-4 h-4 min-w-max"></i>)}
                                 
                                 <div className="flex flex-col w-full">
                                     <div className="flex items-center gap-1.5">
                                         <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 opacity-90 ${isOverdue ? 'text-red-700' : (project.Jabatan === 'Pentadbiran' ? 'text-blue-700' : project.Jabatan === 'Akademik' ? 'text-orange-700' : 'text-green-700')}`} title={project.Jabatan}></i>
-                                        <span className={`font-semibold text-sm truncate ${isOverdue ? 'text-red-800' : 'text-gray-800'}`}>
+                                        <span className={`font-semibold text-sm truncate ${isOverdue ? 'text-red-800' : 'text-gray-800 dark:text-slate-100'}`}>
                                             {project.Projek}
                                         </span>
                                         {project.Catatan && (
@@ -984,7 +1004,7 @@
                                             </div>
                                         )}
                                     </div>
-                                    <span className="text-[10px] text-gray-500 font-medium hidden md:block mt-0.5">
+                                    <span className="text-[10px] text-gray-500 dark:text-slate-400 font-medium hidden md:block mt-0.5">
                                         Dirancang: {project.TarikhAsal || 'Tiada'} | Dijangka: {project.TarikhSebenar || project.TarikhAkhir || 'Tiada'}
                                     </span>
                                 </div>
@@ -992,7 +1012,7 @@
                             
                             <div className="flex items-center gap-2">
                                 <div className="relative group/progress">
-                                    <span className={`text-xs font-bold bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20 cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800'}`}>
+                                    <span className={`text-xs font-bold bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm border border-white/20 cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-slate-100'}`}>
                                         {progress}%
                                     </span>
                                     <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 bg-gray-800 text-white text-[10px] rounded px-2 py-1 opacity-0 group-hover/progress:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">
@@ -1000,7 +1020,7 @@
                                     </div>
                                 </div>
                                 <div className="relative group/time">
-                                    <span className={`flex items-center gap-1.5 text-xs font-medium bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm whitespace-nowrap border border-white/20 hidden sm:flex cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800'}`}>
+                                    <span className={`flex items-center gap-1.5 text-xs font-medium bg-white/80 backdrop-blur-[2px] px-2 py-1.5 rounded-md shadow-sm whitespace-nowrap border border-white/20 hidden sm:flex cursor-help ${isOverdue ? 'text-red-700' : 'text-gray-800 dark:text-slate-100'}`}>
                                         <i data-lucide="clock" className="w-3 h-3"></i>
                                         {calculateDaySpentPercentage(project.TarikhMula, project.TarikhAsal)}
                                     </span>
@@ -1014,7 +1034,7 @@
                 );
             };
 
-            const QuadrantBox = ({ title, category, icon, bgColor, borderColor, titleColor }) => {
+            const QuadrantBox = ({ title, category, icon, bgColor, borderColor, titleColor, glow }) => {
                 const [isDragOver, setIsDragOver] = useState(false);
                 let qProjects = activeProjects.filter(p => (p.Kepentingan || 'Belum Ditetapkan') === category);
 
@@ -1061,7 +1081,7 @@
                             handleDrop(e, category); 
                             setIsDragOver(false); 
                         }}
-                        className={`flex flex-col rounded-xl border-2 border-dashed ${borderColor} bg-white min-h-[160px] transition-all relative group shadow-sm ${isDragOver ? 'ring-4 ring-blue-300 opacity-80' : ''}`}
+                        className={`flex flex-col rounded-xl border-2 border-dashed ${borderColor} ${glow || ''} bg-white dark:bg-slate-800 min-h-[160px] transition-all relative group shadow-sm ${isDragOver ? 'ring-4 ring-blue-300 opacity-80' : ''}`}
                     >
                         <div className={`px-4 py-2 flex items-center gap-2 ${bgColor} rounded-t-lg border-b ${borderColor}`}>
                             <i data-lucide={icon} className={`w-4 h-4 ${titleColor}`}></i>
@@ -1072,7 +1092,7 @@
                             {qProjects.length > 0 ? (
                                 qProjects.map(p => <ProjectBar key={p.Projek} project={p} />)
                             ) : (
-                                <div className="h-full w-full flex items-center justify-center text-gray-400 text-xs italic opacity-70">
+                                <div className="h-full w-full flex items-center justify-center text-gray-400 dark:text-slate-500 text-xs italic opacity-70">
                                     Tarik (drag) projek ke sini
                                 </div>
                             )}
@@ -1094,26 +1114,26 @@
                     {/* ========================================================= */}
                     {/* KANDUNGAN DASHBOARD UTAMA (KABUR JIKA TIADA AKSES) */}
                     {/* ========================================================= */}
-                    <div className={`relative min-h-screen bg-gray-50 text-gray-900 pb-16 font-sans fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] ${!isAuthenticated ? 'blur-[8px] opacity-40 pointer-events-none select-none h-screen overflow-hidden' : ''}`}>
+                    <div className={`relative min-h-screen bg-gray-50 dark:bg-slate-900 dark:bg-slate-950 text-gray-900 dark:text-slate-100 dark:text-slate-100 pb-16 font-sans fade-in bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] dark:bg-[url('https://www.transparenttextures.com/patterns/hexellence.png')] ${!isAuthenticated ? 'blur-[8px] opacity-40 pointer-events-none select-none h-screen overflow-hidden' : ''}`}>
                         
-                        <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-50 pointer-events-auto">
+                        <header className="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 shadow-sm sticky top-0 z-50 pointer-events-auto">
                             <div className="max-w-[1400px] mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between overflow-x-auto whitespace-nowrap hide-scrollbar">
                                 
                                 <div className="flex items-center gap-4 flex-shrink-0">
-                                    <img src="https://lh3.googleusercontent.com/d/1r-NvG4_QmZsUMM6SQl3U7gUz63Spkqx4" alt="Logo" className="h-12 object-contain" />
+                                    <img src="__LOGO_URL__" alt="Logo" className="h-12 object-contain" />
                                     <div className="hidden md:flex flex-col justify-center">
-                                        <h1 className="text-xl font-extrabold text-gray-900 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
-                                        <p className="text-sm text-gray-500 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
+                                        <h1 className="text-xl font-extrabold text-gray-900 dark:text-slate-100 tracking-tight leading-tight uppercase">PELAN TAKTIKAL PPS</h1>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400 font-medium tracking-wide">Perancangan dan Status Tindakan Bulanan</p>
                                     </div>
                                 </div>
                                 
-                                <div className="hidden lg:block w-px h-10 bg-gray-200 mx-4"></div>
+                                <div className="hidden lg:block w-px h-10 bg-gray-200 dark:bg-slate-700 mx-4"></div>
                                 
                                 <div className="hidden lg:flex items-center gap-6 px-2 flex-shrink-0">
-                                    <button onClick={() => document.getElementById('section-timeline')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Sukuan<br/>Tahun</button>
-                                    <button onClick={() => document.getElementById('section-eisenhower')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Matriks<br/>Kepentingan</button>
-                                    <button onClick={() => document.getElementById('section-department')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Mengikut<br/>Sektor</button>
-                                    <button onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 hover:text-blue-700 text-center leading-tight transition-colors">Projek<br/>Lengkap</button>
+                                    <button onClick={() => document.getElementById('section-timeline')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 dark:text-slate-300 hover:text-blue-700 text-center leading-tight transition-colors">Sukuan<br/>Tahun</button>
+                                    <button onClick={() => document.getElementById('section-eisenhower')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 dark:text-slate-300 hover:text-blue-700 text-center leading-tight transition-colors">Matriks<br/>Kepentingan</button>
+                                    <button onClick={() => document.getElementById('section-department')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 dark:text-slate-300 hover:text-blue-700 text-center leading-tight transition-colors">Mengikut<br/>Sektor</button>
+                                    <button onClick={() => document.getElementById('section-completed')?.scrollIntoView({ behavior: 'smooth' })} className="text-sm font-bold text-gray-600 dark:text-slate-300 hover:text-blue-700 text-center leading-tight transition-colors">Projek<br/>Lengkap</button>
                                 </div>
                                 
                                 <div className="flex items-center gap-3 ml-auto lg:ml-4 flex-shrink-0">
@@ -1121,27 +1141,35 @@
                                     {/* BUTANG PENGURUSAN ADMIN */}
                                     <button 
                                         onClick={() => setShowAdminModal(true)} 
-                                        className="flex items-center gap-2 bg-purple-50 text-purple-700 border border-purple-200 hover:bg-purple-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                                        className="flex items-center gap-2 bg-purple-50 dark:bg-purple-900/20 text-purple-700 border border-purple-200 hover:bg-purple-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(168,85,247,0.25)]"
                                     >
                                         <i data-lucide="users" className="w-4 h-4"></i><span className="hidden sm:inline">Admin</span>
                                     </button>
 
                                     <button 
                                         onClick={() => setShowReportModal(true)} 
-                                        className="flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm"
+                                        className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-900/20 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 px-4 py-2 rounded-lg text-sm font-semibold transition-colors shadow-sm shadow-[0_0_8px_rgba(16,185,129,0.25)]"
                                     >
                                         <i data-lucide="file-text" className="w-4 h-4"></i><span className="hidden md:inline">Laporan</span>
                                     </button>
 
                                     <button 
                                         onClick={openAddModal} 
-                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm transition-colors"
+                                        className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-sm shadow-[0_0_10px_rgba(46,77,167,0.35)] transition-colors"
                                     >
                                         <i data-lucide="plus" className="w-4 h-4"></i><span className="hidden md:inline">Tambah Projek</span>
                                     </button>
                                     
-                                    <button onClick={fetchProjects} disabled={loading} className="flex items-center justify-center bg-gray-100 hover:bg-gray-200 text-gray-600 border border-gray-200 p-2.5 rounded-lg transition-colors shadow-sm">
+                                    <button onClick={fetchProjects} disabled={loading} className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm">
                                         <i data-lucide="refresh-cw" className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}></i>
+                                    </button>
+
+                                    <button 
+                                        onClick={toggleTheme}
+                                        title={theme === 'dark' ? 'Tukar ke Mod Cerah' : 'Tukar ke Mod Gelap'}
+                                        className="flex items-center justify-center bg-gray-100 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-700 text-gray-600 dark:text-slate-300 border border-gray-200 dark:border-slate-700 p-2.5 rounded-lg transition-colors shadow-sm"
+                                    >
+                                        <i data-lucide={theme === 'dark' ? 'sun' : 'moon'} className="w-4 h-4"></i>
                                     </button>
                                 </div>
                             </div>
@@ -1154,9 +1182,9 @@
                                  <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-semibold select-all pointer-events-auto">
                                      <i data-lucide="user" className="w-3.5 h-3.5"></i> {currentUserEmail}
                                  </span>
-                                 <span className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-800 border border-blue-200 px-4 py-1.5 rounded-full text-xs font-bold shadow-sm pointer-events-auto">
-                                     <i data-lucide="shield-check" className="w-4 h-4"></i>Akses: Kakitangan PPS
-                                 </span>
+<span className="inline-flex items-center gap-1.5 bg-blue-100 dark:bg-blue-900/20 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800 px-4 py-1.5 rounded-full text-xs font-bold shadow-[0_0_10px_rgba(46,77,167,0.35)] pointer-events-auto">
+                                      <i data-lucide="shield-check" className="w-4 h-4"></i>Akses: Kakitangan PPS
+                                  </span>
                             </div>
 
                             {error && (
@@ -1171,22 +1199,22 @@
 
                             <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} />
 
-                            <div id="section-eisenhower" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 scroll-mt-20">
+                            <div id="section-eisenhower" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                                     <div>
-                                        <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                        <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                             <i data-lucide="layout-grid" className="w-5 h-5 text-blue-600"></i> Carta Matriks Kepentingan
                                         </h2>
-                                        <p className="text-sm text-gray-500 mt-1" data-html2canvas-ignore>
+                                        <p className="text-sm text-gray-500 dark:text-slate-400 mt-1" data-html2canvas-ignore>
                                             Tarik (drag) dan lepaskan (drop) projek untuk menyusun tahap keutamaannya.
                                         </p>
                                     </div>
                                     <div className="flex items-center gap-2" data-html2canvas-ignore>
-                                        <svg className="w-4 h-4 text-gray-500 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-slate-400 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
                                         </svg>
                                         <select 
-                                            className="text-sm font-bold border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 bg-white shadow-sm cursor-pointer"
+                                            className="text-sm font-bold border border-gray-300 dark:border-slate-600 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm cursor-pointer"
                                             value={activeMatrixSortConfig}
                                             onChange={(e) => setActiveMatrixSortConfig(e.target.value)}
                                         >
@@ -1198,20 +1226,20 @@
                                     </div>
                                 </div>
                                 
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                                    <QuadrantBox title="Penting & Segera (Buat Terus)" category="Penting & Segera" icon="flame" bgColor="bg-red-50" borderColor="border-red-200" titleColor="text-red-700" />
-                                    <QuadrantBox title="Penting, Tak Segera (Rancang)" category="Penting & Tak Segera" icon="calendar-clock" bgColor="bg-blue-50" borderColor="border-blue-200" titleColor="text-blue-700" />
-                                    <QuadrantBox title="Kurang Penting, Segera (Serah)" category="Kurang Penting & Segera" icon="users-round" bgColor="bg-amber-50" borderColor="border-amber-200" titleColor="text-amber-700" />
-                                    <QuadrantBox title="Kurang Penting, Tak Segera (Simpan)" category="Kurang Penting & Tak Segera" icon="archive" bgColor="bg-gray-100" borderColor="border-gray-300" titleColor="text-gray-600" />
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-gray-50 dark:bg-slate-900 p-4 rounded-xl border border-gray-100 dark:border-slate-600">
+                                    <QuadrantBox title="Penting & Segera (Buat Terus)" category="Penting & Segera" icon="flame" bgColor="bg-red-50" borderColor="border-red-200" titleColor="text-red-700" glow="shadow-[0_0_8px_rgba(239,68,68,0.3)]" />
+                                    <QuadrantBox title="Penting, Tak Segera (Rancang)" category="Penting & Tak Segera" icon="calendar-clock" bgColor="bg-blue-50 dark:bg-blue-900/20" borderColor="border-blue-200" titleColor="text-blue-700" glow="shadow-[0_0_8px_rgba(59,130,246,0.3)]" />
+                                    <QuadrantBox title="Kurang Penting, Segera (Serah)" category="Kurang Penting & Segera" icon="users-round" bgColor="bg-amber-50" borderColor="border-amber-200" titleColor="text-amber-700" glow="shadow-[0_0_8px_rgba(245,158,11,0.3)]" />
+                                    <QuadrantBox title="Kurang Penting, Tak Segera (Simpan)" category="Kurang Penting & Tak Segera" icon="archive" bgColor="bg-gray-100 dark:bg-slate-800" borderColor="border-gray-300 dark:border-slate-600" titleColor="text-gray-600 dark:text-slate-300" glow="shadow-[0_0_8px_rgba(148,163,184,0.3)]" />
                                 </div>
 
                                 {activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').length > 0 && (
                                     <div 
-                                        className="mt-4 p-4 border-2 border-dashed border-gray-300 rounded-xl bg-white transition-all" 
+                                        className="mt-4 p-4 border-2 border-dashed border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 transition-all" 
                                         onDragOver={(e) => handleDragOver(e)} 
                                         onDrop={(e) => handleDrop(e, 'Belum Ditetapkan')}
                                     >
-                                        <h3 className="text-sm font-bold text-gray-600 mb-3 flex items-center gap-2"><i data-lucide="help-circle" className="w-4 h-4"></i> Projek Belum Ditetapkan Kepentingan</h3>
+                                        <h3 className="text-sm font-bold text-gray-600 dark:text-slate-300 mb-3 flex items-center gap-2"><i data-lucide="help-circle" className="w-4 h-4"></i> Projek Belum Ditetapkan Kepentingan</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                                             {activeProjects.filter(p => !p.Kepentingan || p.Kepentingan === 'Belum Ditetapkan').map(p => (
                                                 <ProjectBar key={p.Projek} project={p} />
@@ -1221,17 +1249,17 @@
                                 )}
                             </div>
 
-                            <div id="section-department" className="bg-white rounded-xl shadow-sm border border-gray-200 p-5 scroll-mt-20">
+                            <div id="section-department" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                                    <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                    <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                         <i data-lucide="building-2" className="w-5 h-5 text-blue-600"></i> Projek Mengikut Sektor
                                     </h2>
                                     <div className="flex items-center gap-2" data-html2canvas-ignore>
-                                        <svg className="w-4 h-4 text-gray-500 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <svg className="w-4 h-4 text-gray-500 dark:text-slate-400 flex-shrink-0" title="Susun Projek" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                             <path d="m3 16 4 4 4-4"/><path d="M7 20V4"/><path d="m21 8-4-4-4 4"/><path d="M17 4v16"/>
                                         </svg>
                                         <select 
-                                            className="text-sm font-bold border border-gray-300 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 bg-white shadow-sm cursor-pointer"
+                                            className="text-sm font-bold border border-gray-300 dark:border-slate-600 rounded-md p-1 focus:ring-2 focus:ring-blue-500 outline-none text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 shadow-sm cursor-pointer"
                                             value={activeSortConfig}
                                             onChange={(e) => setActiveSortConfig(e.target.value)}
                                         >
@@ -1278,7 +1306,7 @@
                                         });
 
                                         return (
-                                            <div key={deptName} className="flex flex-col bg-white rounded-xl shadow-sm border border-gray-200">
+                                            <div key={deptName} className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
                                                 <div className={`${config.headerBg} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
                                                     <div className="flex items-center gap-2">
                                                         <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
@@ -1288,7 +1316,7 @@
                                                 </div>
                                                 <div className="p-4 flex-1 bg-gray-50/50">
                                                     {deptProjects.map((project, index) => <ProjectBar key={index} project={project} />)}
-                                                    {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">Tiada projek direkodkan.</div>}
+                                                    {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 dark:text-slate-500 text-sm border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg">Tiada projek direkodkan.</div>}
                                                 </div>
                                             </div>
                                         );
@@ -1296,14 +1324,14 @@
                                 </div>
                             </div>
 
-                            <div id="section-completed" className="mt-8 flex flex-col bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden scroll-mt-20">
+                            <div id="section-completed" className="mt-8 flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 overflow-hidden scroll-mt-20">
                                 <div className="bg-purple-500 px-6 py-4 text-white flex items-center gap-3">
                                     <i data-lucide="check-circle" className="text-purple-100 w-6 h-6"></i>
                                     <h2 className="text-lg font-bold tracking-wide">PROJEK LENGKAP</h2>
                                 </div>
                                 <div className="overflow-x-auto pb-4">
-                                    <table className="w-full text-sm text-left text-gray-600">
-                                        <thead className="text-xs text-gray-700 uppercase bg-gray-50 border-b border-gray-200">
+                                    <table className="w-full text-sm text-left text-gray-600 dark:text-slate-300">
+                                        <thead className="text-xs text-gray-700 dark:text-slate-200 uppercase bg-gray-50 dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700">
                                             <tr>
                                                 <th className="px-6 py-4 font-semibold">Bil</th>
                                                 <th className="px-6 py-4 font-semibold cursor-pointer hover:bg-purple-100 transition-colors" onClick={() => requestSort('Projek')}>
@@ -1323,10 +1351,10 @@
                                         </thead>
                                         <tbody>
                                             {sortedCompletedProjects.map((project, index) => (
-                                                <tr key={index} className="bg-white border-b hover:bg-purple-50/50 transition-colors">
-                                                    <td className="px-6 py-3 font-medium text-gray-900">{index + 1}</td>
+                                                <tr key={index} className="bg-white dark:bg-slate-800 border-b hover:bg-purple-50/50 transition-colors">
+                                                    <td className="px-6 py-3 font-medium text-gray-900 dark:text-slate-100">{index + 1}</td>
                                                     
-                                                    <td className="px-6 py-3 font-semibold text-gray-800">
+                                                    <td className="px-6 py-3 font-semibold text-gray-800 dark:text-slate-100">
                                                         <div className="flex items-center gap-1.5 w-max">
                                                             <i data-lucide={getDeptIcon(project.Jabatan)} className={`w-4 h-4 flex-shrink-0 ${project.Jabatan === 'Pentadbiran' ? 'text-blue-600' : project.Jabatan === 'Akademik' ? 'text-orange-600' : 'text-green-600'}`} title={project.Jabatan}></i>
                                                             <span>{project.Projek}</span>
@@ -1403,7 +1431,7 @@
                     {/* ========================================================= */}
                     {showAdminModal && (
                         <div className="fixed inset-0 bg-black/60 flex items-start justify-center z-[100] p-4 pt-24 backdrop-blur-sm">
-                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in border border-gray-100">
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden fade-in border border-gray-100 dark:border-slate-600">
                                 <div className="bg-purple-600 px-5 py-4 text-white flex justify-between items-center">
                                     <div className="flex items-center gap-2">
                                         <i data-lucide="users-cog" className="w-5 h-5 text-purple-100"></i>
@@ -1412,7 +1440,7 @@
                                     <button onClick={() => setShowAdminModal(false)} className="text-purple-100 hover:text-white"><i data-lucide="x" className="w-5 h-5"></i></button>
                                 </div>
                                 
-                                <div className="p-6 bg-slate-50 border-b border-gray-200">
+                                <div className="p-6 bg-slate-50 dark:bg-slate-800/50 border-b border-gray-200 dark:border-slate-700">
                                     <form onSubmit={handleAddAdmin} className="flex gap-2">
                                         <input 
                                             type="email" 
@@ -1420,7 +1448,7 @@
                                             placeholder="Masukkan emel baru..." 
                                             value={newAdminEmail}
                                             onChange={(e) => setNewAdminEmail(e.target.value)}
-                                            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 outline-none text-sm"
+                                            className="flex-1 px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 focus:ring-2 focus:ring-purple-500 outline-none text-sm"
                                         />
                                         <button 
                                             type="submit" 
@@ -1435,7 +1463,7 @@
                                 <div className="p-4 max-h-[50vh] overflow-y-auto">
                                     <div className="space-y-2">
                                         {adminList.map((email, idx) => (
-                                            <div key={idx} className="flex items-center justify-between bg-white p-3 rounded-lg border border-gray-200 shadow-sm">
+                                            <div key={idx} className="flex items-center justify-between bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-700 shadow-sm">
                                                 <div className="flex items-center gap-3">
                                                     <div className="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center font-bold text-xs uppercase">
                                                         {email.charAt(0)}
@@ -1466,7 +1494,7 @@
                     {/* ========================================================= */}
                     {showReportModal && (
                         <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[100] p-4 backdrop-blur-sm">
-                            <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in border border-gray-100">
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden fade-in border border-gray-100 dark:border-slate-600">
                                 <div className="bg-emerald-600 px-5 py-4 text-white flex justify-between items-center">
                                     <div className="flex items-center gap-2">
                                         <i data-lucide="file-down" className="w-5 h-5 text-emerald-100"></i>
@@ -1483,32 +1511,32 @@
                                         </div>
                                     ) : (
                                         <>
-                                            <p className="text-sm text-gray-600 mb-5">Pilih kandungan untuk laporan PDF anda. Laporan akan terus dimuat turun (download) ke dalam peranti anda.</p>
+                                            <p className="text-sm text-gray-600 dark:text-slate-300 mb-5">Pilih kandungan untuk laporan PDF anda. Laporan akan terus dimuat turun (download) ke dalam peranti anda.</p>
 
-                                            <div className="mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
-                                                <label className="block text-sm font-bold text-gray-700 mb-3">Pilih Kandungan Laporan:</label>
+                                            <div className="mb-6 bg-gray-50 dark:bg-slate-900 p-4 rounded-lg border border-gray-100 dark:border-slate-600">
+                                                <label className="block text-sm font-bold text-gray-700 dark:text-slate-200 mb-3">Pilih Kandungan Laporan:</label>
                                                 <div className="space-y-2.5">
                                                     <label className="flex items-center gap-3 cursor-pointer">
                                                         <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.timeline} onChange={(e) => setReportSelections({...reportSelections, timeline: e.target.checked})} />
-                                                        <span className="text-sm text-gray-700">Carta Sukuan Tahun</span>
+                                                        <span className="text-sm text-gray-700 dark:text-slate-200">Carta Sukuan Tahun</span>
                                                     </label>
                                                     <label className="flex items-center gap-3 cursor-pointer">
                                                         <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.eisenhower} onChange={(e) => setReportSelections({...reportSelections, eisenhower: e.target.checked})} />
-                                                        <span className="text-sm text-gray-700">Carta Matriks Kepentingan</span>
+                                                        <span className="text-sm text-gray-700 dark:text-slate-200">Carta Matriks Kepentingan</span>
                                                     </label>
                                                     <label className="flex items-center gap-3 cursor-pointer">
                                                         <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.department} onChange={(e) => setReportSelections({...reportSelections, department: e.target.checked})} />
-                                                        <span className="text-sm text-gray-700">Projek Mengikut Sektor</span>
+                                                        <span className="text-sm text-gray-700 dark:text-slate-200">Projek Mengikut Sektor</span>
                                                     </label>
                                                     <label className="flex items-center gap-3 cursor-pointer">
                                                         <input type="checkbox" className="w-4 h-4 text-emerald-600 rounded focus:ring-emerald-500" checked={reportSelections.completed} onChange={(e) => setReportSelections({...reportSelections, completed: e.target.checked})} />
-                                                        <span className="text-sm text-gray-700">Projek Lengkap</span>
+                                                        <span className="text-sm text-gray-700 dark:text-slate-200">Projek Lengkap</span>
                                                     </label>
                                                 </div>
                                             </div>
 
                                             <div className="flex gap-3">
-                                                <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium transition-colors text-sm">Batal</button>
+                                                <button type="button" onClick={() => setShowReportModal(false)} className="flex-1 px-4 py-2.5 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-50 dark:bg-slate-900 font-medium transition-colors text-sm">Batal</button>
                                                 <button 
                                                     type="submit" 
                                                     disabled={isGeneratingReport || (!reportSelections.timeline && !reportSelections.eisenhower && !reportSelections.department && !reportSelections.completed)} 
@@ -1527,10 +1555,10 @@
                     {/* MODAL TAMBAH/KEMASKINI PROJEK */}
                     {showModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[100] p-4 pt-20 md:pt-24">
-                            <div className="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden fade-in">
-                                <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-gray-50">
-                                    <h3 className="font-bold text-lg text-gray-800">{isEditing ? 'Maklumat Projek' : 'Tambah Projek Baru'}</h3>
-                                    <button onClick={() => setShowModal(false)} className="text-gray-400 hover:text-gray-600"><i data-lucide="x" className="w-5 h-5"></i></button>
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden fade-in">
+                                <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-slate-600 bg-gray-50 dark:bg-slate-900">
+                                    <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">{isEditing ? 'Maklumat Projek' : 'Tambah Projek Baru'}</h3>
+                                    <button onClick={() => setShowModal(false)} className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:text-slate-300"><i data-lucide="x" className="w-5 h-5"></i></button>
                                 </div>
                                 
                                 <form onSubmit={handleSaveProject} className="p-5 space-y-4 max-h-[75vh] overflow-y-auto">
@@ -1543,8 +1571,8 @@
                                     )}
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Bahagian / Jabatan</label>
-                                        <select className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Jabatan} onChange={(e) => setFormData({...formData, Jabatan: e.target.value})}>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Bahagian / Jabatan</label>
+                                        <select className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 focus:ring-2 outline-none" value={formData.Jabatan} onChange={(e) => setFormData({...formData, Jabatan: e.target.value})}>
                                             <option value="Pentadbiran">Pentadbiran</option>
                                             <option value="Akademik">Akademik</option>
                                             <option value="Hal Ehwal Siswazah">Hal Ehwal Siswazah</option>
@@ -1552,13 +1580,13 @@
                                     </div>
                                     
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama Projek</label>
-                                        <input type="text" required placeholder="Cth: Sistem E-Filing Baru" className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Projek} onChange={(e) => setFormData({...formData, Projek: e.target.value})} />
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Nama Projek</label>
+                                        <input type="text" required placeholder="Cth: Sistem E-Filing Baru" className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 focus:ring-2 outline-none" value={formData.Projek} onChange={(e) => setFormData({...formData, Projek: e.target.value})} />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Kategori Kepentingan</label>
-                                        <select className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 outline-none" value={formData.Kepentingan} onChange={(e) => setFormData({...formData, Kepentingan: e.target.value})}>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Kategori Kepentingan</label>
+                                        <select className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 focus:ring-2 outline-none" value={formData.Kepentingan} onChange={(e) => setFormData({...formData, Kepentingan: e.target.value})}>
                                             <option value="Belum Ditetapkan">- Sila Pilih (Atau drag di luar nanti) -</option>
                                             <option value="Penting & Segera">Penting & Segera (Merah)</option>
                                             <option value="Penting & Tak Segera">Penting & Tak Segera (Biru)</option>
@@ -1569,35 +1597,35 @@
 
                                     <div className="flex gap-4 items-center pt-2">
                                         <div className="flex-1">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Mula</label>
-                                            <input type="date" className="w-full border border-gray-300 rounded-md p-2 outline-none cursor-pointer text-sm" value={toInputDate(formData.TarikhMula)} onChange={(e) => setFormData({...formData, TarikhMula: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Tarikh Mula</label>
+                                            <input type="date" className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 outline-none cursor-pointer text-sm" value={toInputDate(formData.TarikhMula)} onChange={(e) => setFormData({...formData, TarikhMula: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
                                         </div>
                                         <div className="w-24">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Kemajuan</label>
-                                            <div className="flex items-center gap-1 border border-gray-300 rounded-md p-2">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Kemajuan</label>
+                                            <div className="flex items-center gap-1 border border-gray-300 dark:border-slate-600 rounded-md p-2">
                                                 <input type="number" min="0" max="100" required className="w-full outline-none text-center text-sm" value={formData.Kemajuan} onChange={(e) => setFormData({...formData, Kemajuan: e.target.value})} />
-                                                <span className="text-gray-500 text-sm">%</span>
+                                                <span className="text-gray-500 dark:text-slate-400 text-sm">%</span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="flex gap-4">
                                         <div className="w-1/2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Siap (Dirancang)</label>
-                                            <input type="date" className="w-full border border-gray-300 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhAsal)} onChange={(e) => setFormData({...formData, TarikhAsal: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Tarikh Siap (Dirancang)</label>
+                                            <input type="date" className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhAsal)} onChange={(e) => setFormData({...formData, TarikhAsal: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
                                         </div>
                                         <div className="w-1/2">
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">Tarikh Siap (Dijangka)</label>
-                                            <input type="date" required={parseInt(formData.Kemajuan) === 100} className="w-full border border-gray-300 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhSebenar)} onChange={(e) => setFormData({...formData, TarikhSebenar: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Tarikh Siap (Dijangka)</label>
+                                            <input type="date" required={parseInt(formData.Kemajuan) === 100} className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 outline-none text-sm cursor-pointer" value={toInputDate(formData.TarikhSebenar)} onChange={(e) => setFormData({...formData, TarikhSebenar: toDisplayDate(e.target.value)})} onClick={(e) => e.target.showPicker && e.target.showPicker()} />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700 mb-1">Catatan</label>
+                                        <label className="block text-sm font-medium text-gray-700 dark:text-slate-200 mb-1">Catatan</label>
                                         <textarea 
                                             rows="2" 
                                             placeholder="Nota tambahan (pilihan)" 
-                                            className="w-full border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" 
+                                            className="w-full border border-gray-300 dark:border-slate-600 rounded-md p-2 focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none" 
                                             value={formData.Catatan} 
                                             onChange={(e) => setFormData({...formData, Catatan: e.target.value})}
                                         ></textarea>
@@ -1608,7 +1636,7 @@
                                             <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                                                 <p className="text-red-800 text-sm font-medium mb-3 text-center">Adakah anda pasti mahu membuang projek ini secara kekal?</p>
                                                 <div className="flex gap-2">
-                                                    <button type="button" onClick={() => setShowConfirmDelete(false)} disabled={isSubmitting} className="flex-1 px-3 py-2 bg-white border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 font-medium text-sm transition-colors">Batal</button>
+                                                    <button type="button" onClick={() => setShowConfirmDelete(false)} disabled={isSubmitting} className="flex-1 px-3 py-2 bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-50 dark:bg-slate-900 font-medium text-sm transition-colors">Batal</button>
                                                     <button 
                                                         type="button" 
                                                         onClick={executeDelete} 
@@ -1623,7 +1651,7 @@
                                     ) : (
                                         <div className="pt-4 flex flex-col gap-2">
                                             <div className="flex gap-2">
-                                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 font-medium transition-colors">Batal</button>
+                                                <button type="button" onClick={() => setShowModal(false)} className="flex-1 px-4 py-2 bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-slate-200 rounded-md hover:bg-gray-200 dark:bg-slate-700 font-medium transition-colors">Batal</button>
                                                 <button 
                                                     type="submit" 
                                                     disabled={isSubmitting} 

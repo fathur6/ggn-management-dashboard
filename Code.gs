@@ -4,16 +4,16 @@
  * ============================================================================
  *
  * Repository: ggn-management-dashboard
- * Script ID: 1u-MJvVzM9xRQmhwnUyhVYiU01tYQh0KAzDAeXU1ou9McGFrSQtHYCOcn
- * Deployment ID: AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV
- * Web App URL: https://script.google.com/macros/s/AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV/exec
- * Target Spreadsheet ID: 1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU
+ * Script ID: __SCRIPT_ID__
+ * Deployment ID: __DEPLOYMENT_ID__
+ * Web App URL: __GOOGLE_SCRIPT_URL__
+ * Target Spreadsheet ID: __SPREADSHEET_ID__
  *
  * DEPLOYMENT SETTINGS (SOP):
  * 1. Execute As: "User accessing the web app" (to trigger Google OAuth)
  * 2. Who has access: "Anyone with Google account" (or UniSZA domain)
  * 3. Deployment Method (To keep URL unchanged):
- * `clasp push && clasp deploy -i AKfycbwTcTdp1JfVZEI_HWQvpMFSrxlQCJWobUnf9mOM8puajn09QQ_1oeTT1fNUm1oHPhoV -d "Update version"`
+ * `clasp push && clasp deploy -i __DEPLOYMENT_ID__ -d "Update version"`
  * ============================================================================
  */
 
@@ -28,10 +28,10 @@ function doGet() {
   // Jika senarai kosong (kali pertama run), masukkan senarai asal yang anda berikan
   if (!admins) {
     const defaultAdmins = [
-      "pps@unisza.edu.my", "fathurrahman@unisza.edu.my", "mutiasobihah@unisza.edu.my", 
-      "whishamudin@unisza.edu.my", "yusnitayusof@unisza.edu.my", "fairuznasir@unisza.edu.my", 
-      "fatinhannani@unisza.edu.my", "ariffahimi@unisza.edu.my", "azuhazana@unisza.edu.my", 
-      "afiqahnorozi@unisza.edu.my", "muhammadhamizan@unisza.edu.my", "shuhadaaziz@unisza.edu.my"
+      "admin@example.com", "user1@example.com", "user2@example.com", 
+      "user3@example.com", "user4@example.com", "user5@example.com", 
+      "user6@example.com", "user7@example.com", "user8@example.com", 
+      "user9@example.com", "user10@example.com", "user11@example.com"
     ];
     admins = JSON.stringify(defaultAdmins);
     props.setProperty('ADMIN_EMAILS', admins);
@@ -61,7 +61,7 @@ function doPost(e) {
   var data = JSON.parse(e.postData.contents);
 
   // Menggunakan openById bagi menyokong Local Development Workflow (Standalone Script)
-  var sheet = SpreadsheetApp.openById("1tmSzIXIfeKG9NWjqtk6fLkEuEw5X2-VPwcrOdRxakuU").getSheetByName("Status Projek PPS");
+  var sheet = SpreadsheetApp.openById("__SPREADSHEET_ID__").getSheetByName("Status Projek PPS");
   if (!sheet) {
     return ContentService.createTextOutput(JSON.stringify({ "status": "ralat", "mesej": "Sheet 'Status Projek PPS' tidak dijumpai" })).setMimeType(ContentService.MimeType.JSON);
   }
