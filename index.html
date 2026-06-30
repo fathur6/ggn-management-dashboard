@@ -173,7 +173,6 @@
 
             const tabs = [
                 { id: 'sukuan', label: 'Sukuan Tahun', icon: 'calendar-days' },
-                { id: 'aktiviti', label: 'Ringkasan Aktiviti', icon: 'bar-chart-3' },
                 { id: 'matriks', label: 'Matriks Kepentingan', icon: 'layout-grid' },
                 { id: 'sektor', label: 'Mengikut Sektor', icon: 'building-2' },
                 { id: 'lengkap', label: 'Projek Lengkap', icon: 'check-circle' },
@@ -183,7 +182,7 @@
                 const hash = window.location.hash.replace('#', '');
                 if (hash) {
                     const [tab, dept] = hash.split('/');
-                    if (['sukuan','aktiviti','matriks','sektor','lengkap'].includes(tab)) {
+                    if (['sukuan','matriks','sektor','lengkap'].includes(tab)) {
                         setActiveTab(tab);
                         if (dept) setSelectedDept(dept);
                     }
@@ -191,8 +190,8 @@
             }, []);
 
             useEffect(() => {
-                const hash = selectedDept ? `${activeTab}/${selectedDept}` : activeTab;
-                if (window.location.hash !== `#${hash}`) {
+                const hash = activeTab ? (selectedDept ? `${activeTab}/${selectedDept}` : activeTab) : '';
+                if (!hash && window.location.hash) { window.history.replaceState(null, '', window.location.pathname); } else if (window.location.hash !== `#${hash}`) {
                     window.history.replaceState(null, '', `#${hash}`);
                 }
             }, [activeTab, selectedDept]);
@@ -1141,7 +1140,7 @@
             return (
                 <>
                     {/* RINGKASAN AKTIVITI */}
-                    {activeTab === 'aktiviti' && (
+                    {activeTab === null && (
                         <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 fade-in">
                             <div className="mb-6">
                                 <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
@@ -1229,7 +1228,7 @@
                                 
                                 <div className="hidden lg:flex items-center gap-6 px-2 flex-shrink-0">
                                     {tabs.map(t => (
-                                        <button key={t.id} onClick={() => setActiveTab(t.id)}
+                                        <button key={t.id} onClick={() => setActiveTab(activeTab === t.id ? null : t.id)}
                                             className={`text-sm font-bold text-center leading-tight transition-colors ${activeTab === t.id ? 'text-blue-700 dark:text-blue-400' : 'text-gray-600 dark:text-slate-300 hover:text-blue-700 dark:hover:text-blue-400'}`}>
                                             {t.label.split(' ').map((word, i) => <span key={i}>{word}{i === 0 && t.label.includes(' ') && <br/>}</span>)}
                                         </button>
@@ -1279,7 +1278,7 @@
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pointer-events-auto">
                             <div className="flex gap-2 overflow-x-auto hide-scrollbar">
                                 {tabs.map(t => (
-                                    <button key={t.id} onClick={() => setActiveTab(t.id)}
+                                    <button key={t.id} onClick={() => setActiveTab(activeTab === t.id ? null : t.id)}
                                         className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap ${
                                             activeTab === t.id
                                                 ? 'bg-unisza-blue text-white shadow-[0_0_10px_rgba(46,77,167,0.45)]'
@@ -1314,7 +1313,7 @@
                                 </div>
                             )}
 
-                            {activeTab === 'sukuan' && <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} />}
+                            {(activeTab === 'sukuan' || activeTab === null) && <ProjectTimeline activeProjects={activeProjects} completedProjects={completedProjects} compact={activeTab !== 'sukuan'} />}
 
                             {activeTab === 'matriks' && <div id="section-eisenhower" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 scroll-mt-20">
                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
