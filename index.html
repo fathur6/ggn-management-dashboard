@@ -233,7 +233,7 @@
                 document.querySelectorAll('i[data-lucide]:not([data-lucide-done])').forEach(el => {
                     const name = el.getAttribute('data-lucide');
                     if (!name) return;
-                    const svg = lucide.createElement(name);
+                    const svg = lucide.createElement(name, {});
                     svg.setAttribute('aria-hidden', 'true');
                     el.appendChild(svg);
                     el.setAttribute('data-lucide-done', 'true');
