@@ -960,7 +960,7 @@
                 });
 
                 return (
-                    <div id="section-timeline" className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 overflow-visible scroll-mt-20">
+                    <div id="section-timeline" className="bg-white dark:bg-slate-800 rounded-xl shadow-[0_0_16px_rgba(45,212,191,0.10)] shadow-sm border border-teal-500/20 dark:border-teal-500/20 p-5 overflow-visible scroll-mt-20">
                         <div className="mb-6">
                             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                 <i data-lucide="calendar-days" className="w-5 h-5 text-blue-600"></i> Carta Sukuan Tahun
@@ -1398,7 +1398,7 @@
 
                         {/* TAB BAR */}
                         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 pointer-events-auto">
-                            <div className="flex gap-2 overflow-x-auto hide-scrollbar">
+                            <div className="flex gap-2 overflow-x-auto hide-scrollbar shadow-[0_0_12px_rgba(45,212,191,0.18)] rounded-xl border border-teal-500/30 bg-white dark:bg-slate-800 p-1">
                                 {tabs.map(t => (
                                     <button key={t.id} onClick={() => setOpenPanel(t.id)}
                                         className="flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-bold transition-all whitespace-nowrap bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 hover:bg-gray-200 dark:hover:bg-slate-700">
@@ -1435,7 +1435,7 @@
                         
                     {/* RINGKASAN AKTIVITI */}
                     {projects.length > 0 && (
-                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 p-5 fade-in">
+                        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-[0_0_16px_rgba(45,212,191,0.10)] shadow-sm border border-teal-500/20 dark:border-teal-500/20 p-5 fade-in">
                             <div className="mb-6">
                                 <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                     <i data-lucide="bar-chart-3" className="w-5 h-5 text-blue-600"></i> Ringkasan Aktiviti
@@ -1510,7 +1510,7 @@
                     {/* ========================================================= */}
                     {!isAuthenticated && (
                         <div className="fixed inset-0 z-[1000] flex items-center justify-center">
-                             <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-2xl border border-white max-w-md w-full text-center fade-in">
+                             <div className="bg-white/95 backdrop-blur-xl p-8 rounded-2xl shadow-[0_0_25px_rgba(239,68,68,0.25)] border border-red-500/40 max-w-md w-full text-center fade-in">
                                   <i data-lucide="shield-alert" className="w-16 h-16 text-red-500 mx-auto mb-4"></i>
                                   <h2 className="text-2xl font-bold text-slate-800 mb-2">Akses Dihadkan</h2>
                                   <p className="text-slate-600 mb-2 leading-relaxed">
@@ -1672,7 +1672,7 @@
                     {/* MODAL TAMBAH/KEMASKINI PROJEK */}
                     {showModal && (
                         <div className="fixed inset-0 bg-black/50 flex items-start justify-center z-[300] p-4 pt-20 md:pt-24">
-                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl w-full max-w-md overflow-hidden fade-in">
+                            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.14)] w-full max-w-md overflow-hidden fade-in border border-amber-500/30">
                                 <div className="flex justify-between items-center p-4 border-b border-gray-100 dark:border-slate-600 bg-gray-50 dark:bg-slate-900">
                                     <h3 className="font-bold text-lg text-gray-800 dark:text-slate-100">{isEditing ? 'Maklumat Projek' : 'Tambah Projek Baru'}</h3>
                                     <button onClick={() => setShowModal(false)} className="text-gray-400 dark:text-slate-500 hover:text-gray-600 dark:text-slate-300"><i data-lucide="x" className="w-5 h-5"></i></button>
@@ -1864,7 +1864,7 @@
                             {openPanel === 'sukuan' && (
                                 <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
-                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
+                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-[0_0_20px_rgba(59,130,246,0.12)] overflow-y-auto rounded-2xl border border-blue-500/30 dark:border-blue-500/30 pointer-events-auto fade-in">
                                         <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl">
                                             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                                 <i data-lucide="calendar-days" className="w-5 h-5 text-blue-600"></i> Sukuan Tahun
@@ -1886,7 +1886,7 @@
                             {openPanel === 'matriks' && (
                                 <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
-                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
+                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-[0_0_20px_rgba(168,85,247,0.12)] overflow-y-auto rounded-2xl border border-purple-500/30 dark:border-purple-500/30 pointer-events-auto fade-in">
                                         <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl">
                                             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                                 <i data-lucide="layout-grid" className="w-5 h-5 text-blue-600"></i> Carta Matriks Kepentingan
@@ -1930,7 +1930,7 @@
                             {openPanel === 'sektor' && (
                                 <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
-                                    <div className="relative w-full max-w-[95vw] max-h-[90vh] mx-2 sm:mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
+                                    <div className="relative w-full max-w-[95vw] max-h-[90vh] mx-2 sm:mx-4 bg-white dark:bg-slate-800 shadow-[0_0_20px_rgba(45,212,191,0.12)] overflow-y-auto rounded-2xl border border-teal-500/30 dark:border-teal-500/30 pointer-events-auto fade-in">
                                         <div className="sticky top-0 bg-white dark:bg-slate-800 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-slate-700 rounded-t-2xl">
                                             <h2 className="text-xl font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2">
                                                 <i data-lucide="building-2" className="w-5 h-5 text-blue-600"></i> Projek Mengikut Sektor
@@ -2002,7 +2002,6 @@
                                                                     {deptProjects.map((project, index) => {
                                                         const prog = parseInt(project.Kemajuan) || 0;
                                                         const timeSpent = getDaySpentPercentageValue(project.TarikhMula, project.TarikhAsal);
-                                                        const timeOver = timeSpent > 100;
                                                         return (
                                                             <div key={index} onClick={() => { if(isAuthenticated) handleEditClick(project); }} className="bg-white dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600 p-3 mb-3 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-600 transition-all">
                                                                 <div className="font-semibold text-sm text-gray-800 dark:text-slate-100 mb-2 truncate">{project.Projek}</div>
@@ -2013,10 +2012,11 @@
                                                                     </div>
                                                                 </div>
                                                                 <div className="flex items-center gap-2">
-                                                                    <i data-lucide="clock" className="w-3.5 h-3.5 text-blue-600 flex-shrink-0"></i>
+                                                                    <i data-lucide="clock" className={`w-3.5 h-3.5 flex-shrink-0 ${timeSpent > 100 ? 'text-red-600' : timeSpent >= 90 ? 'text-orange-600' : 'text-blue-600'}`}></i>
                                                                     <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                                                                        <div className={`h-full rounded-full transition-all duration-700 ${timeOver ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
+                                                                        <div className={`h-full rounded-full transition-all duration-700 ${timeSpent > 100 ? 'bg-red-500' : timeSpent >= 90 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
                                                                     </div>
+                                                                    <span className={`text-xs font-bold ${timeSpent > 100 ? 'text-red-600' : timeSpent >= 90 ? 'text-orange-600' : 'text-blue-600'}`}>{Math.round(timeSpent)}%</span>
                                                                 </div>
                                                             </div>
                                                         );
@@ -2074,7 +2074,6 @@
                                                                         {deptProjects.map((project, index) => {
                                                     const prog = parseInt(project.Kemajuan) || 0;
                                                     const timeSpent = getDaySpentPercentageValue(project.TarikhMula, project.TarikhAsal);
-                                                    const timeOver = timeSpent > 100;
                                                     const isSelected = sektorSelectedProjek === project.Projek;
                                                     return (
                                                         <div key={index}
@@ -2088,10 +2087,11 @@
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <i data-lucide="clock" className={`w-3.5 h-3.5 flex-shrink-0 ${timeOver ? 'text-red-600' : 'text-blue-600'}`}></i>
+                                                                <i data-lucide="clock" className={`w-3.5 h-3.5 flex-shrink-0 ${timeSpent > 100 ? 'text-red-600' : timeSpent >= 90 ? 'text-orange-600' : 'text-blue-600'}`}></i>
                                                                 <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                                                                    <div className={`h-full rounded-full transition-all duration-700 ${timeOver ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
+                                                                    <div className={`h-full rounded-full transition-all duration-700 ${timeSpent > 100 ? 'bg-red-500' : timeSpent >= 90 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
                                                                 </div>
+                                                                <span className={`text-xs font-bold ${timeSpent > 100 ? 'text-red-600' : timeSpent >= 90 ? 'text-orange-600' : 'text-blue-600'}`}>{Math.round(timeSpent)}%</span>
                                                             </div>
                                                         </div>
                                                     );
@@ -2104,7 +2104,7 @@
                                                     </div>
 
                                                     {/* RIGHT: details panel */}
-                                                    <div className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 sticky top-[100px] self-start">
+                                                    <div className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-[0_0_20px_rgba(45,212,191,0.12)] border border-teal-500/30 dark:border-teal-500/30 sticky top-[100px] self-start">
                                                         {(() => {
                                                             const selProj = activeProjects.find(p => p.Projek === sektorSelectedProjek && p.Jabatan === panelSelectedDept);
                                                             if (!selProj) {
@@ -2156,37 +2156,37 @@
                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Kategori Kepentingan</span>
                                                                             <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.Kepentingan || '-'}</p>
                                                                         </div>
-                                                                        <div className="grid grid-cols-2 gap-4">
-                                                                            <div>
-                                                                                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Mula</span>
-                                                                                <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhMula || '-'}</p>
-                                                                            </div>
-                                                                            <div>
-                                                                                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Kemajuan</span>
-                                                                                <div className="flex items-center gap-2 mt-1">
-                                                                                    <div className="flex-1 h-2.5 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                                                                                        <div className={`h-full rounded-full transition-all duration-700 ${selIsOverdue ? 'bg-red-500' : 'bg-green-500'}`} style={{width: `${Math.min(prog, 100)}%`}}></div>
-                                                                                    </div>
-                                                                                    <span className={`font-bold text-sm ${prog === 100 ? 'text-green-600' : selIsOverdue ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>{prog}%</span>
-                                                                                </div>
+                                                                         <div className="grid grid-cols-2 gap-4">
+                                                                             <div>
+                                                                                 <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Mula</span>
+                                                                                 <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhMula || '-'}</p>
+                                                                             </div>
+                                                                             <div>
+                                                                                 <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dirancang)</span>
+                                                                                 <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhAsal || '-'}</p>
+                                                                             </div>
+                                                                         </div>
+                                                                         <div>
+                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Kemajuan</span>
+                                                                             <div className="flex items-center gap-2 mt-1">
+                                                                                 <div className="flex-1 h-2.5 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                                                                     <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{width: `${Math.min(prog, 100)}%`}}></div>
+                                                                                 </div>
+                                                                                 <span className={`font-bold text-sm ${prog === 100 ? 'text-green-600' : 'text-gray-700 dark:text-slate-200'}`}>{Math.round(prog)}%</span>
                                                                              </div>
                                                                          </div>
                                                                          <div>
                                                                              <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Garis Masa</span>
                                                                              <div className="flex items-center gap-2 mt-1">
                                                                                  <div className="flex-1 h-2.5 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
-                                                                                     <div className={`h-full rounded-full transition-all duration-700 ${timeSpent >= 100 ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
+                                                                                     <div className={`h-full rounded-full transition-all duration-700 ${timeSpent > 100 ? 'bg-red-500' : timeSpent >= 90 ? 'bg-orange-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
                                                                                  </div>
-                                                                                 <span className={`font-bold text-sm ${timeSpent >= 100 ? 'text-red-600' : 'text-blue-600'}`}>{timeSpent}%</span>
+                                                                                 <span className={`font-bold text-sm ${timeSpent > 100 ? 'text-red-600' : timeSpent >= 90 ? 'text-orange-600' : 'text-blue-600'}`}>{Math.round(timeSpent)}%</span>
                                                                              </div>
                                                                          </div>
                                                                          <div>
-                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dirancang)</span>
-                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhAsal || '-'}</p>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dijangka)</span>
-                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhSebenar || selProj.TarikhAkhir || '-'}</p>
+                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dijangka)</span>
+                                                                             <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhSebenar || selProj.TarikhAkhir || '-'}</p>
                                                                         </div>
                                                                         {selProj.Catatan && (
                                                                             <div>
@@ -2212,7 +2212,7 @@
                             {openPanel === 'lengkap' && (
                                 <div className="fixed inset-0 z-[200] flex items-center justify-center pointer-events-none">
                                     <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpenPanel(null)}></div>
-                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-2xl overflow-y-auto rounded-2xl border border-gray-200 dark:border-slate-700 pointer-events-auto fade-in">
+                                    <div className="relative w-full max-w-4xl max-h-[85vh] mx-4 bg-white dark:bg-slate-800 shadow-[0_0_20px_rgba(16,185,129,0.12)] overflow-y-auto rounded-2xl border border-emerald-500/30 dark:border-emerald-500/30 pointer-events-auto fade-in">
                                         <div className="sticky top-0 bg-purple-500 px-6 py-4 text-white flex items-center justify-between rounded-t-2xl">
                                             <h2 className="text-lg font-bold tracking-wide flex items-center gap-2"><i data-lucide="check-circle" className="w-5 h-5"></i> PROJEK LENGKAP</h2>
                                             <button onClick={() => setOpenPanel(null)} className="text-purple-100 hover:text-white p-2 hover:bg-purple-600 rounded-md transition-colors">
