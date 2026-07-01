@@ -2120,8 +2120,9 @@
                                                                     </>
                                                                 );
                                                             }
-                                                            const prog = parseInt(selProj.Kemajuan) || 0;
-                                                            const selIsOverdue = checkIsOverdue(selProj.TarikhAsal, prog);
+                                                             const prog = parseInt(selProj.Kemajuan) || 0;
+                                                             const selIsOverdue = checkIsOverdue(selProj.TarikhAsal, prog);
+                                                             const timeSpent = getDaySpentPercentageValue(selProj.TarikhMula, selProj.TarikhAsal);
                                                             return (
                                                                 <>
                                                                     <div className="bg-slate-100 dark:bg-slate-900 px-5 py-3 rounded-t-xl border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
@@ -2168,10 +2169,19 @@
                                                                                     </div>
                                                                                     <span className={`font-bold text-sm ${prog === 100 ? 'text-green-600' : selIsOverdue ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>{prog}%</span>
                                                                                 </div>
-                                                                            </div>
-                                                                        </div>
-                                                                        <div>
-                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dirancang)</span>
+                                                                             </div>
+                                                                         </div>
+                                                                         <div>
+                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Garis Masa</span>
+                                                                             <div className="flex items-center gap-2 mt-1">
+                                                                                 <div className="flex-1 h-2.5 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                                                                     <div className={`h-full rounded-full transition-all duration-700 ${timeSpent >= 100 ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
+                                                                                 </div>
+                                                                                 <span className={`font-bold text-sm ${timeSpent >= 100 ? 'text-red-600' : 'text-blue-600'}`}>{timeSpent}%</span>
+                                                                             </div>
+                                                                         </div>
+                                                                         <div>
+                                                                             <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dirancang)</span>
                                                                             <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhAsal || '-'}</p>
                                                                         </div>
                                                                         <div>
