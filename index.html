@@ -175,6 +175,7 @@
             const [openPanel, setOpenPanel] = useState(null);
             const [selectedDept, setSelectedDept] = useState(null);
             const [panelSelectedDept, setPanelSelectedDept] = useState(null);
+            const [sektorSelectedProjek, setSektorSelectedProjek] = useState(null);
             const [catatanFormat, setCatatanFormat] = useState('plain');
             const [catatanItems, setCatatanItems] = useState([]);
             const [newItemText, setNewItemText] = useState('');
@@ -265,6 +266,42 @@
                 window.addEventListener('keydown', handleKeyDown);
                 return () => window.removeEventListener('keydown', handleKeyDown);
             }, [openPanel, showModal, showConfirmDelete, showReportModal, showAdminModal]);
+
+            // Auto-pilih projek pertama apabila sektor ditapis oleh jabatan
+            useEffect(() => {
+                if (!panelSelectedDept) {
+                    setSektorSelectedProjek(null);
+                    return;
+                }
+                let deptProjects = activeProjects.filter(p => p.Jabatan === panelSelectedDept);
+                deptProjects.sort((a, b) => {
+                    if (activeSortConfig === 'taktikal') {
+                        const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                        const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                        if (isOverdueA && !isOverdueB) return -1;
+                        if (!isOverdueA && isOverdueB) return 1;
+                        if (isOverdueA && isOverdueB) {
+                            const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                            const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                            return daySpentB - daySpentA;
+                        }
+                        return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                    } else if (activeSortConfig === 'prog_desc') {
+                        return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                    } else if (activeSortConfig === 'prog_asc') {
+                        return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                    } else if (activeSortConfig === 'date_asc') {
+                        const dateA = parseDateForSort(a.TarikhAsal);
+                        const dateB = parseDateForSort(b.TarikhAsal);
+                        if (dateA === 0 && dateB === 0) return 0;
+                        if (dateA === 0) return 1;
+                        if (dateB === 0) return -1;
+                        return dateA - dateB;
+                    }
+                    return 0;
+                });
+                setSektorSelectedProjek(deptProjects.length > 0 ? deptProjects[0].Projek : null);
+            }, [panelSelectedDept, activeProjects, activeSortConfig]);
 
             // Tarik data sebaik laman web dibuka
             useEffect(() => {
@@ -1922,51 +1959,127 @@
                                                     </button>
                                                 ))}
                                             </div>
-                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                                {Object.entries(departmentConfig).filter(([deptName]) => !panelSelectedDept || deptName === panelSelectedDept).map(([deptName, config]) => {
-                                                    let deptProjects = activeProjects.filter(p => p.Jabatan === deptName);
-                                                    deptProjects.sort((a, b) => {
-                                                        if (activeSortConfig === 'taktikal') {
-                                                            const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
-                                                            const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
-                                                            if (isOverdueA && !isOverdueB) return -1;
-                                                            if (!isOverdueA && isOverdueB) return 1;
-                                                            if (isOverdueA && isOverdueB) {
-                                                                const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
-                                                                const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
-                                                                return daySpentB - daySpentA;
+                                            {!panelSelectedDept ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                                    {Object.entries(departmentConfig).map(([deptName, config]) => {
+                                                        let deptProjects = activeProjects.filter(p => p.Jabatan === deptName);
+                                                        deptProjects.sort((a, b) => {
+                                                            if (activeSortConfig === 'taktikal') {
+                                                                const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                                                                const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                                                                if (isOverdueA && !isOverdueB) return -1;
+                                                                if (!isOverdueA && isOverdueB) return 1;
+                                                                if (isOverdueA && isOverdueB) {
+                                                                    const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                                                                    const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                                                                    return daySpentB - daySpentA;
+                                                                }
+                                                                return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                            } else if (activeSortConfig === 'prog_desc') {
+                                                                return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                            } else if (activeSortConfig === 'prog_asc') {
+                                                                return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                                                            } else if (activeSortConfig === 'date_asc') {
+                                                                const dateA = parseDateForSort(a.TarikhAsal);
+                                                                const dateB = parseDateForSort(b.TarikhAsal);
+                                                                if (dateA === 0 && dateB === 0) return 0;
+                                                                if (dateA === 0) return 1;
+                                                                if (dateB === 0) return -1;
+                                                                return dateA - dateB;
                                                             }
-                                                            return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
-                                                        } else if (activeSortConfig === 'prog_desc') {
-                                                            return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
-                                                        } else if (activeSortConfig === 'prog_asc') {
-                                                            return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
-                                                        } else if (activeSortConfig === 'date_asc') {
-                                                            const dateA = parseDateForSort(a.TarikhAsal);
-                                                            const dateB = parseDateForSort(b.TarikhAsal);
-                                                            if (dateA === 0 && dateB === 0) return 0;
-                                                            if (dateA === 0) return 1;
-                                                            if (dateB === 0) return -1;
-                                                            return dateA - dateB;
-                                                        }
-                                                        return 0;
-                                                    });
-                                                    return (
-                                                        <div key={deptName} className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
-                                                            <div className={`${config.headerBg} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
-                                                                <div className="flex items-center gap-2">
-                                                                    <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
-                                                                    <h3 className="font-bold">{deptName}</h3>
+                                                            return 0;
+                                                        });
+                                                        return (
+                                                            <div key={deptName} className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                                                                <div className={`${config.headerBg} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
+                                                                    <div className="flex items-center gap-2">
+                                                                        <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
+                                                                        <h3 className="font-bold">{deptName}</h3>
+                                                                    </div>
+                                                                    <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{deptProjects.length}</span>
                                                                 </div>
-                                                                <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{deptProjects.length}</span>
+                                                                <div className="p-4 flex-1 bg-gray-50/50">
+                                                                    {deptProjects.map((project, index) => {
+                                                        const prog = parseInt(project.Kemajuan) || 0;
+                                                        const timeSpent = getDaySpentPercentageValue(project.TarikhMula, project.TarikhAsal);
+                                                        const timeOver = timeSpent > 100;
+                                                        return (
+                                                            <div key={index} onClick={() => { if(isAuthenticated) handleEditClick(project); }} className="bg-white dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600 p-3 mb-3 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-600 transition-all">
+                                                                <div className="font-semibold text-sm text-gray-800 dark:text-slate-100 mb-2 truncate">{project.Projek}</div>
+                                                                <div className="flex items-center gap-2 mb-1.5">
+                                                                    <i data-lucide="zap" className="w-3.5 h-3.5 text-green-600 flex-shrink-0"></i>
+                                                                    <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                                                        <div className="h-full bg-green-500 rounded-full transition-all duration-700" style={{width: `${Math.min(prog, 100)}%`}}></div>
+                                                                    </div>
+                                                                </div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <i data-lucide="clock" className="w-3.5 h-3.5 text-blue-600 flex-shrink-0"></i>
+                                                                    <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                                                        <div className={`h-full rounded-full transition-all duration-700 ${timeOver ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div className="p-4 flex-1 bg-gray-50/50">
-                                                                {deptProjects.map((project, index) => {
+                                                        );
+                                                    })}
+                                                                    {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 dark:text-slate-500 text-sm border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg">Tiada projek direkodkan.</div>}
+                                                                </div>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            ) : (
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                    {/* LEFT: senarai projek jabatan */}
+                                                    <div className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700">
+                                                        {(() => {
+                                                            const deptName = panelSelectedDept;
+                                                            const config = departmentConfig[deptName];
+                                                            let deptProjects = activeProjects.filter(p => p.Jabatan === deptName);
+                                                            deptProjects.sort((a, b) => {
+                                                                if (activeSortConfig === 'taktikal') {
+                                                                    const isOverdueA = checkIsOverdue(a.TarikhAsal, a.Kemajuan);
+                                                                    const isOverdueB = checkIsOverdue(b.TarikhAsal, b.Kemajuan);
+                                                                    if (isOverdueA && !isOverdueB) return -1;
+                                                                    if (!isOverdueA && isOverdueB) return 1;
+                                                                    if (isOverdueA && isOverdueB) {
+                                                                        const daySpentA = getDaySpentPercentageValue(a.TarikhMula, a.TarikhAsal);
+                                                                        const daySpentB = getDaySpentPercentageValue(b.TarikhMula, b.TarikhAsal);
+                                                                        return daySpentB - daySpentA;
+                                                                    }
+                                                                    return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                                } else if (activeSortConfig === 'prog_desc') {
+                                                                    return (parseInt(b.Kemajuan) || 0) - (parseInt(a.Kemajuan) || 0);
+                                                                } else if (activeSortConfig === 'prog_asc') {
+                                                                    return (parseInt(a.Kemajuan) || 0) - (parseInt(b.Kemajuan) || 0);
+                                                                } else if (activeSortConfig === 'date_asc') {
+                                                                    const dateA = parseDateForSort(a.TarikhAsal);
+                                                                    const dateB = parseDateForSort(b.TarikhAsal);
+                                                                    if (dateA === 0 && dateB === 0) return 0;
+                                                                    if (dateA === 0) return 1;
+                                                                    if (dateB === 0) return -1;
+                                                                    return dateA - dateB;
+                                                                }
+                                                                return 0;
+                                                            });
+                                                            return (
+                                                                <>
+                                                                    <div className={`${config?.headerBg || 'bg-blue-600'} px-5 py-3 rounded-t-xl text-white flex justify-between items-center`}>
+                                                                        <div className="flex items-center gap-2">
+                                                                            <i data-lucide={getDeptIcon(deptName)} className="w-5 h-5"></i>
+                                                                            <h3 className="font-bold">{deptName}</h3>
+                                                                        </div>
+                                                                        <span className="text-xs bg-white/20 px-2 py-1 rounded-full">{deptProjects.length}</span>
+                                                                    </div>
+                                                                    <div className="p-4 flex-1 bg-gray-50/50">
+                                                                        {deptProjects.map((project, index) => {
                                                     const prog = parseInt(project.Kemajuan) || 0;
                                                     const timeSpent = getDaySpentPercentageValue(project.TarikhMula, project.TarikhAsal);
                                                     const timeOver = timeSpent > 100;
+                                                    const isSelected = sektorSelectedProjek === project.Projek;
                                                     return (
-                                                        <div key={index} onClick={() => { if(isAuthenticated) handleEditClick(project); }} className="bg-white dark:bg-slate-700 rounded-lg border border-gray-200 dark:border-slate-600 p-3 mb-3 cursor-pointer hover:shadow-md hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-600 transition-all">
+                                                        <div key={index}
+                                                            onClick={() => setSektorSelectedProjek(project.Projek)}
+                                                            className={`bg-white dark:bg-slate-700 rounded-lg border p-3 mb-3 cursor-pointer transition-all ${isSelected ? 'border-blue-400 ring-2 ring-blue-400 dark:ring-blue-500 bg-blue-50/50 dark:bg-blue-900/20' : 'border-gray-200 dark:border-slate-600 hover:shadow-md hover:ring-2 hover:ring-blue-300 dark:hover:ring-blue-600'}`}>
                                                             <div className="font-semibold text-sm text-gray-800 dark:text-slate-100 mb-2 truncate">{project.Projek}</div>
                                                             <div className="flex items-center gap-2 mb-1.5">
                                                                 <i data-lucide="zap" className="w-3.5 h-3.5 text-green-600 flex-shrink-0"></i>
@@ -1975,7 +2088,7 @@
                                                                 </div>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <i data-lucide="clock" className="w-3.5 h-3.5 text-blue-600 flex-shrink-0"></i>
+                                                                <i data-lucide="clock" className={`w-3.5 h-3.5 flex-shrink-0 ${timeOver ? 'text-red-600' : 'text-blue-600'}`}></i>
                                                                 <div className="flex-1 h-2 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
                                                                     <div className={`h-full rounded-full transition-all duration-700 ${timeOver ? 'bg-red-500' : 'bg-blue-500'}`} style={{width: `${Math.min(timeSpent, 100)}%`}}></div>
                                                                 </div>
@@ -1983,12 +2096,101 @@
                                                         </div>
                                                     );
                                                 })}
-                                                                {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 dark:text-slate-500 text-sm border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg">Tiada projek direkodkan.</div>}
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
+                                                                        {deptProjects.length === 0 && !loading && <div className="text-center py-6 text-gray-400 dark:text-slate-500 text-sm border-2 border-dashed border-gray-200 dark:border-slate-700 rounded-lg">Tiada projek direkodkan.</div>}
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+
+                                                    {/* RIGHT: details panel */}
+                                                    <div className="flex flex-col bg-white dark:bg-slate-800 rounded-xl shadow-sm border border-gray-200 dark:border-slate-700 sticky top-[100px] self-start">
+                                                        {(() => {
+                                                            const selProj = activeProjects.find(p => p.Projek === sektorSelectedProjek && p.Jabatan === panelSelectedDept);
+                                                            if (!selProj) {
+                                                                return (
+                                                                    <>
+                                                                        <div className="bg-slate-100 dark:bg-slate-900 px-5 py-3 rounded-t-xl border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                                                                            <h3 className="font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="file-text" className="w-5 h-5 text-blue-600"></i> Maklumat Projek</h3>
+                                                                        </div>
+                                                                        <div className="flex-1 p-10 text-center text-gray-400 dark:text-slate-500 text-sm">
+                                                                            <i data-lucide="inbox" className="w-10 h-10 mx-auto mb-3 opacity-50"></i>
+                                                                            <p>Tiada projek dipilih.</p>
+                                                                        </div>
+                                                                    </>
+                                                                );
+                                                            }
+                                                            const prog = parseInt(selProj.Kemajuan) || 0;
+                                                            const selIsOverdue = checkIsOverdue(selProj.TarikhAsal, prog);
+                                                            return (
+                                                                <>
+                                                                    <div className="bg-slate-100 dark:bg-slate-900 px-5 py-3 rounded-t-xl border-b border-gray-200 dark:border-slate-700 flex items-center justify-between">
+                                                                        <h3 className="font-bold text-gray-800 dark:text-slate-100 flex items-center gap-2"><i data-lucide="file-text" className="w-5 h-5 text-blue-600"></i> Maklumat Projek</h3>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {isAuthenticated && (
+                                                                                <button onClick={(e) => { e.stopPropagation(); handleEditClick(selProj); }}
+                                                                                    className="text-xs bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-md font-semibold flex items-center gap-1.5 transition-colors">
+                                                                                    <i data-lucide="pencil" className="w-3.5 h-3.5"></i> Edit
+                                                                                </button>
+                                                                            )}
+                                                                            <button onClick={() => setSektorSelectedProjek(null)}
+                                                                                className="text-gray-400 hover:text-gray-600 dark:hover:text-slate-200 p-1.5 hover:bg-gray-200 dark:hover:bg-slate-700 rounded-md transition-colors">
+                                                                                <i data-lucide="x" className="w-4 h-4"></i>
+                                                                            </button>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="p-5 space-y-4 text-sm max-h-[70vh] overflow-y-auto">
+                                                                        <div>
+                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Bahagian / Jabatan</span>
+                                                                            <div className="flex items-center gap-2 mt-1 font-medium text-gray-800 dark:text-slate-100">
+                                                                                <i data-lucide={getDeptIcon(selProj.Jabatan)} className="w-4 h-4 text-blue-600"></i>
+                                                                                {selProj.Jabatan}
+                                                                            </div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Nama Projek</span>
+                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.Projek}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Kategori Kepentingan</span>
+                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.Kepentingan || '-'}</p>
+                                                                        </div>
+                                                                        <div className="grid grid-cols-2 gap-4">
+                                                                            <div>
+                                                                                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Mula</span>
+                                                                                <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhMula || '-'}</p>
+                                                                            </div>
+                                                                            <div>
+                                                                                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Kemajuan</span>
+                                                                                <div className="flex items-center gap-2 mt-1">
+                                                                                    <div className="flex-1 h-2.5 bg-gray-200 dark:bg-slate-600 rounded-full overflow-hidden">
+                                                                                        <div className={`h-full rounded-full transition-all duration-700 ${selIsOverdue ? 'bg-red-500' : 'bg-green-500'}`} style={{width: `${Math.min(prog, 100)}%`}}></div>
+                                                                                    </div>
+                                                                                    <span className={`font-bold text-sm ${prog === 100 ? 'text-green-600' : selIsOverdue ? 'text-red-600' : 'text-gray-700 dark:text-slate-200'}`}>{prog}%</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dirancang)</span>
+                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhAsal || '-'}</p>
+                                                                        </div>
+                                                                        <div>
+                                                                            <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Tarikh Siap (Dijangka)</span>
+                                                                            <p className="mt-1 font-medium text-gray-800 dark:text-slate-100">{selProj.TarikhSebenar || selProj.TarikhAkhir || '-'}</p>
+                                                                        </div>
+                                                                        {selProj.Catatan && (
+                                                                            <div>
+                                                                                <span className="text-xs font-semibold text-gray-500 dark:text-slate-400 uppercase tracking-wide">Catatan</span>
+                                                                                <div className="mt-1 bg-gray-50 dark:bg-slate-900 border border-gray-200 dark:border-slate-700 rounded-lg p-3 text-gray-700 dark:text-slate-200 text-sm">{renderCatatan(selProj.Catatan)}</div>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>
